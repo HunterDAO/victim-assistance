@@ -3,7 +3,10 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+
+import "./Collector.sol";
 
 /**
  * @title Campaign
@@ -12,18 +15,10 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * for financial assistance funding private investigations, or asset recovery
  * services, or cybersecurity provdIded by the HunterDAO or partner DAOs / firms.
  */
-contract CrowdfundingCampaign is AccessControl {
+contract CrowdfundingCampaign is Ownable, Pausable {
 
     using SafeMath for uint256;
     using Address for address;
-
-    address public applicationAdminAddress;
-    uint256 public constant campaignDuration = 1814400;
-
-    event ApplicationApproved(address applicant, uint256 applicationdId);
-    event ApplicationDenied(address applicant, uint256 applicationdId);
-    event DonationReceived(uint256 campaignId, address donor, uint256 donationValue);
-    event CampaignFinalized(uint256 campaignId, uint256 totalCollected);
 
     enum CampaignStatus {
         Active,
@@ -31,155 +26,144 @@ contract CrowdfundingCampaign is AccessControl {
         Failed
     }
 
-    struct Application {
-        bool approved;
-        uint256 maximumFunding;
-        address applicantAddress;
-        address serviceProvdIderAddress;
-    }
+    // struct Donor {
+    //     address donorAddress;
+    //     uint256 contribution;
+    //     IERC20 token;
+    //     uint256 erc20Contribution;
+    // } TODO: Support arbitrary ERC20s
 
-    struct Campaign {
-        CampaignStatus status;
-        uint256 startTime;
-        uint256 endTime;
-        uint256 maximumFunding;
-        uint256 totalCollected;
-        address vaultAddress;
-        address applicantAddress;
-        address serviceProvdIderAddress;
-    }
+    uint256 public constant campaignDuration = 1814400;
 
-    struct Donor {
-        address donorAddress;
-        uint256 donationValue;
-        uint256 campaignId;
-    }
+    CampaignStatus private campaignStatus;
 
-    Application[] internal applications;
-    Campaign[] internal campaigns;
+    uint256 private startTime;
+    uint256 public endTime;
+    
+    uint256 public maximumFunding;
+    uint256 public totalCollected;
+    Counters.Counter public numDonors;
+    
+    address private vaultAddress;
+    
+    mapping(address => uint256) internal donorContribution;
 
-    mapping(address => uint256) internal ownerToCampaignId;
-    mapping(address => uint256) internal donorAddressToIndex;
-    mapping(uint256 => Donor[]) internal campaignIdToDonors;
+    event DonationReceived(address donor, uint256 contribution);
+    event OverflowDonationReturned(address donor, uint256 overflow);
+    event CampaignSucceeded(uint256 totalCollected);
+    event CampaignFailed(uint256 totalCollected);
 
     constructor(
-        address _adminAddress
+        address _serviceProvider
     ) {
-        grantRole("ADMIN", _adminAddress);
+        vaultAddress = new Collector(_serviceProvider);
     }
 
-    function newCampaignApplication(
-        uint256 _maximumFunding,
-        address _serviceProvdIderAddress
-    ) public {
-        Application memory application = Application(
-            false,
-            _maximumFunding,
-            _msgSender(),
-            _serviceProvdIderAddress
-        );
-        applications.push(application);
+    receive () external payable {
+        _donate(_owner());
     }
 
-    function approveApplication(
-        uint256 applicationdId
-    ) public {
-        require(hasRole("ADMIN", _msgSender()), "Must be admin to approve an application.");
-        _approveApplication(applicationdId);
-        _initiateCampaign(applicationdId);
-        emit ApplicationApproved(applications[applicationdId].applicantAddress, applicationdId);
+    fallback () external payable {
+        _donate(_owner());
     }
 
-    function denyApplication(
-        uint256 applicationdId
-    ) public {
-        require(hasRole("ADMIN", _msgSender()), "Must be admin approve an application.");
-        _denyApplication(applicationdId);
-        emit ApplicationDenied(applications[applicationdId].applicantAddress, applicationdId);
+    function donate() public payable {
+        _donate();
     }
 
-    function finalizeCampaign(
-        uint256 campaignId
-    ) public {
-        require(hasRole("ADMIN", _msgSender()), "Must be admin approve an application.");
-        _setFinalCampaignStatus(campaignId);
-        emit CampaignFinalized(campaignId, campaigns[campaignId].totalCollected);
+    function getNumberOfDonors() public view returns (uint256) {
+        return numDonors.current();
     }
 
-    function donate(
-        uint256 campaignId
-    ) public payable {
-        Campaign storage campaign = campaigns[campaignId];
-        require(campaign.endTime >= block.timestamp, "Campaign Expired");
-        require(campaign.totalCollected < campaign.maximumFunding, "Campaign Funding Cap Already Satisfied");
-        _newDonor(_msgSender(), msg.value, campaignId);
-        _updateTotalCollected(campaignId, msg.value);
-        payable(campaigns[campaignId].vaultAddress).transfer(msg.value);
-        emit DonationReceived(campaignId, _msgSender(), msg.value);
+    function getDonorContribution(address _donorAddress) public view returns (uint256) {
+        return donorContribution[_donorAddress];
     }
 
-    function getNumberOfDonors(uint256 campaignId) public view returns (uint256) {
-        return campaignIdToDonors[campaignId].length;
-    }
+    function finalizeCampaign() public onlyOwner {
+        _finalizeCampaign();
+    } 
 
-    function _approveApplication(uint256 applicationId) internal {
-        Application storage application = applications[applicationId];
-        application.approved = true;
-    }
+    function _donate() internal {
+        require(totalCollected <= maximumFunding, "Campaign Funding Cap Already Satisfied");
+        require(now >= startTime || now < endTime, "Camapaign Expired!");
+        require(msg.value != 0, "Send value cannot be zero!");
 
-    function _denyApplication(uint256 applicationId) internal {
-        Application storage application = applications[applicationId];
-        application.approved = false;
-    }
+        uint256 overflow;
+        uint256 sendValue; 
 
-    function _initiateCampaign(uint256 applicationId) internal {
-        Application memory application = applications[applicationId];
-        // TODO: implement vault address vaultAddress = address(new Vault());
-        Campaign memory campaign = Campaign(
-            CampaignStatus.Active,
-            block.timestamp,
-            block.timestamp + campaignDuration,
-            application.maximumFunding,
-            0,
-            application.applicantAddress,
-            application.applicantAddress,
-            application.serviceProvdIderAddress
-        );
-        campaigns.push(campaign);
-        uint256 campaignId = campaigns.length - 1;
-        ownerToCampaignId[application.applicantAddress];
-    }
-
-    function _updateTotalCollected(
-        uint256 campaignId,
-        uint256 donationValue
-    ) internal {
-        Campaign storage campaign = campaigns[campaignId];
-        campaign.totalCollected += donationValue;
-    }
-
-    function _setFinalCampaignStatus(
-        uint256 campaignId
-    ) internal {
-        Campaign storage campaign = campaigns[campaignId];
-        if (campaign.totalCollected >= campaign.maximumFunding) {
-            campaign.status = CampaignStatus.Successful;
+        if (totalCollected + msg.value > maximumFunding) {
+            overflow = maximumFunding - (totalCollected + msg.value);
+            if (!_msgSender().send(overflow)) {
+                throw;
+            } else {
+                emit OverflowDonation(_msgSender(), overflow);
+            }
+            sendValue = msg.value - overflow;
+            _finalizeCampaign();
         } else {
-            campaign.status = CampaignStatus.Failed;
+            sendValue = msg.value;
+        }
+
+        //Track how much the Campaign has collected
+        totalCollected += sendValue;
+        donorContribution[_msgSender()] += sendValue;
+
+        //Send the ether to the vault
+        if(!payable(vaultAddress).send(sendValue)) {
+            throw;
+        } else 
+            numDonors.increment();
+            emit DonationReceived(msgSender(), sendValue);
         }
     }
 
-    function _newDonor(
-        address _donorAddress,
-        uint256 _donationValue,
-        uint256 _campaignId
-    ) internal {
-        Donor memory donor = Donor(
-            _donorAddress,
-            _donationValue,
-            _campaignId
-        );
-        campaignIdToDonors[_campaignId].push(donor);
-        donorAddressToIndex[_msgSender()] = campaignIdToDonors[_campaignId].length - 1;
+    function _finalizeCampaign() internal {
+        require(now >= endTime || totalCollected >= maximumFunding, "Campaign should remain active!");
+        if (totalCollected >= maximumFunding) {
+            emit CampaignSucceeded(totalCollected);
+            status = CampaignStatus.Successful;
+            _pause();
+        } else {
+            status = CampaignStatus.Failed;
+            emit CampaignFailed(totalCollected);
+            _pause();
+        }
     }
+
+    // function _newDonor(
+    //     address _donorAddress,
+    //     uint256 _donationValue
+    // ) internal {
+    //     Donor memory donor = Donor(
+    //         _donorAddress,
+    //         _donationValue
+    //     );
+    //     donors[_].push(donor);
+    //     donorIndex[_msgSender()] = donors[_].length - 1;
+    // }
+
+    //////////
+    // Safety Methods
+    //////////
+
+    /// @notice This method can be used by the controller to extract mistakenly
+    ///  sent tokens to this contract.
+    /// @param _token The address of the token contract that you want to recover
+    ///  set to 0 in case you want to extract ether.
+    function claimTokens(address _token) public onlyOwner {
+        if (tokenContract.controller() == address(this)) {
+            tokenContract.claimTokens(_token);
+        }
+        if (_token == 0x0) {
+            owner.transfer(this.balance);
+            return;
+        }
+
+        ERC20Token token = ERC20Token(_token);
+        uint256 balance = token.balanceOf(this);
+        token.transfer(owner, balance);
+        ClaimedTokens(_token, owner, balance);
+    }
+
+    event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
 }
