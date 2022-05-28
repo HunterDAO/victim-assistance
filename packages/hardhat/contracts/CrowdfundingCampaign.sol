@@ -71,10 +71,6 @@ contract CrowdfundingCampaign is Ownable, Pausable {
         _donate();
     }
 
-    fallback () external payable {
-        _donate();
-    }
-
     function donate() public payable {
         _donate();
     }
