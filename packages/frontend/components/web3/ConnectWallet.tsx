@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { useEthers } from '@usedapp/core'
 import React from 'react'
-import { walletconnect, walletlink } from '../lib/connectors'
+import { walletconnect, walletlink } from '../../lib/connectors'
 
 function ConnectWallet(): JSX.Element {
   const { activate, activateBrowserWallet } = useEthers()

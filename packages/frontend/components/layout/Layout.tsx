@@ -1,28 +1,17 @@
+import React from 'react'
 import {
   Alert,
   AlertDescription,
   AlertIcon,
   AlertTitle,
   Box,
-  Button,
   Container,
-  Flex,
-  Image,
-  Link,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  SimpleGrid,
-  Text,
 } from '@chakra-ui/react'
-import { useEthers, useNotifications } from '@usedapp/core'
-import blockies from 'blockies-ts'
-import NextLink from 'next/link'
-import React from 'react'
-import Balance from '../Balance'
-import ConnectWallet from '../ConnectWallet'
+import { useNotifications } from '@usedapp/core'
+import { truncateHash } from '../../lib/utils'
 import Head, { MetaProps } from './Head'
+import Navbar from './Navbar'
+import Footer from './Footer'
 
 // Extends `window` to add `ethereum`.
 declare global {
@@ -41,11 +30,6 @@ const TRANSACTION_TITLES = {
   transactionSucceed: 'Local Transaction Completed',
 }
 
-// Takes a long hash string and truncates it.
-function truncateHash(hash: string, length = 38): string {
-  return hash.replace(hash.substring(6, length), '...')
-}
-
 /**
  * Prop Types
  */
@@ -58,65 +42,13 @@ interface LayoutProps {
  * Component
  */
 const Layout = ({ children, customMeta }: LayoutProps): JSX.Element => {
-  const { account, deactivate } = useEthers()
   const { notifications } = useNotifications()
 
-  let blockieImageSrc
-  if (typeof window !== 'undefined') {
-    blockieImageSrc = blockies.create({ seed: account }).toDataURL()
-  }
 
   return (
     <>
       <Head customMeta={customMeta} />
-      <header>
-        <Container maxWidth="container.xl">
-          <SimpleGrid
-            columns={[1, 1, 1, 2]}
-            alignItems="center"
-            justifyContent="space-between"
-            py="8"
-          >
-            <Flex py={[4, null, null, 0]}>
-              <NextLink href="/" passHref>
-                <Link px="4" py="1">
-                  Home
-                </Link>
-              </NextLink>
-              <NextLink href="/graph-example" passHref>
-                <Link px="4" py="1">
-                  Graph Example
-                </Link>
-              </NextLink>
-              <NextLink href="/signature-example" passHref>
-                <Link px="4" py="1">
-                  Signature Example
-                </Link>
-              </NextLink>
-            </Flex>
-            {account ? (
-              <Flex
-                order={[-1, null, null, 2]}
-                alignItems={'center'}
-                justifyContent={['flex-start', null, null, 'flex-end']}
-              >
-                <Balance />
-                <Image ml="4" src={blockieImageSrc} alt="blockie" />
-                <Menu placement="bottom-end">
-                  <MenuButton as={Button} ml="4">
-                    {truncateHash(account)}
-                  </MenuButton>
-                  <MenuList>
-                    <MenuItem onClick={deactivate}>Disconnect</MenuItem>
-                  </MenuList>
-                </Menu>
-              </Flex>
-            ) : (
-              <ConnectWallet />
-            )}
-          </SimpleGrid>
-        </Container>
-      </header>
+      <Navbar />
       <main>
         <Container maxWidth="container.xl">
           {children}
@@ -148,14 +80,7 @@ const Layout = ({ children, customMeta }: LayoutProps): JSX.Element => {
           })}
         </Container>
       </main>
-      <footer>
-        <Container mt="8" py="8" maxWidth="container.xl">
-          <Text>
-            Built by{' '}
-            <Link href="https://twitter.com/hunterhchang">Hunter Chang</Link>
-          </Text>
-        </Container>
-      </footer>
+      <Footer />
     </>
   )
 }
