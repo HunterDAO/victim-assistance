@@ -3,8 +3,10 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import "./Collector.sol";
 
@@ -19,6 +21,7 @@ contract CrowdfundingCampaign is Ownable, Pausable {
 
     using SafeMath for uint256;
     using Address for address;
+    using Counters for Counters.Counter;
 
     enum CampaignStatus {
         Active,
@@ -54,17 +57,17 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     event CampaignFailed(uint256 totalCollected);
 
     constructor(
-        address _serviceProvider
+        address payable _serviceProvider
     ) {
-        vaultAddress = new Collector(_serviceProvider);
+        vaultAddress = address(new Collector(_serviceProvider));
     }
 
     receive () external payable {
-        _donate(_owner());
+        payable(_msgSender()).transfer(msg.value);
     }
 
     fallback () external payable {
-        _donate(_owner());
+        payable(_msgSender()).transfer(msg.value);
     }
 
     function donate() public payable {
@@ -79,13 +82,13 @@ contract CrowdfundingCampaign is Ownable, Pausable {
         return donorContribution[_donorAddress];
     }
 
-    function finalizeCampaign() public onlyOwner {
+    function finalizeCampaign() public onlyOwner() {
         _finalizeCampaign();
     } 
 
     function _donate() internal {
         require(totalCollected <= maximumFunding, "Campaign Funding Cap Already Satisfied");
-        require(now >= startTime || now < endTime, "Camapaign Expired!");
+        require(block.timestamp >= startTime || block.timestamp < endTime, "Camapaign Expired!");
         require(msg.value != 0, "Send value cannot be zero!");
 
         uint256 overflow;
@@ -93,12 +96,12 @@ contract CrowdfundingCampaign is Ownable, Pausable {
 
         if (totalCollected + msg.value > maximumFunding) {
             overflow = maximumFunding - (totalCollected + msg.value);
-            if (!_msgSender().send(overflow)) {
-                throw;
-            } else {
-                emit OverflowDonation(_msgSender(), overflow);
-            }
+
+            payable(_msgSender()).transfer(overflow);
+            emit OverflowDonationReturned(_msgSender(), overflow);
+
             sendValue = msg.value - overflow;
+
             _finalizeCampaign();
         } else {
             sendValue = msg.value;
@@ -109,38 +112,21 @@ contract CrowdfundingCampaign is Ownable, Pausable {
         donorContribution[_msgSender()] += sendValue;
 
         //Send the ether to the vault
-        if(!payable(vaultAddress).send(sendValue)) {
-            throw;
-        } else 
-            numDonors.increment();
-            emit DonationReceived(msgSender(), sendValue);
-        }
+        payable(vaultAddress).transfer(sendValue);
+        numDonors.increment();
+        emit DonationReceived(_msgSender(), sendValue);
     }
 
     function _finalizeCampaign() internal {
-        require(now >= endTime || totalCollected >= maximumFunding, "Campaign should remain active!");
+        require(block.timestamp >= endTime || totalCollected >= maximumFunding, "Campaign should remain active!");
         if (totalCollected >= maximumFunding) {
             emit CampaignSucceeded(totalCollected);
-            status = CampaignStatus.Successful;
             _pause();
         } else {
-            status = CampaignStatus.Failed;
             emit CampaignFailed(totalCollected);
             _pause();
         }
     }
-
-    // function _newDonor(
-    //     address _donorAddress,
-    //     uint256 _donationValue
-    // ) internal {
-    //     Donor memory donor = Donor(
-    //         _donorAddress,
-    //         _donationValue
-    //     );
-    //     donors[_].push(donor);
-    //     donorIndex[_msgSender()] = donors[_].length - 1;
-    // }
 
     //////////
     // Safety Methods
@@ -150,20 +136,21 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(address _token) public onlyOwner {
-        if (tokenContract.controller() == address(this)) {
-            tokenContract.claimTokens(_token);
-        }
-        if (_token == 0x0) {
-            owner.transfer(this.balance);
-            return;
-        }
+    function claimTokens(address _token, address payable _recipient) public onlyOwner() {
+        // if (tokenContract.controller() == address(this)) {
+            // tokenContract.claimTokens(_token);
+        // }
+        // if (_token == 0x0) {
+        //     _recipient.transfer(this.balance);
+        //     return;
+        // }
 
-        ERC20Token token = ERC20Token(_token);
-        uint256 balance = token.balanceOf(this);
-        token.transfer(owner, balance);
-        ClaimedTokens(_token, owner, balance);
+        // IERC20 token = IERC20(_token);
+        // uint256 balance = token.balanceOf(this);
+        // token.transfer(_recipient, balance);
+        // emit ClaimedTokens(_token, _recipient, balance);
     }
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);
+
 }

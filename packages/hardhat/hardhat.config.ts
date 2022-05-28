@@ -7,13 +7,13 @@ import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-solhint";
 import "@typechain/hardhat";
 import "dotenv/config";
-import "hardhat-deploy";
-import "solidity-coverage";
+// import "hardhat-deploy";
+// import "solidity-coverage";
 
-import "./tasks/accounts";
-import "./tasks/balance";
-import "./tasks/block-number";
-import "./tasks/create-collectibles";
+// import "./tasks/accounts";
+// import "./tasks/balance";
+// import "./tasks/block-number";
+// import "./tasks/create-collectibles";
 
 const MAINNET_RPC_URL =
     process.env.MAINNET_RPC_URL ||

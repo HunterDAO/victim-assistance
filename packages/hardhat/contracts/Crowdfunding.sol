@@ -3,7 +3,9 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 /**
  * @title Campaign
@@ -69,11 +71,11 @@ contract Crowdfunding is AccessControl {
     }
 
     receive () external payable {
-        _msgSender().send(msg.value);
+        payable(_msgSender()).send(msg.value);
     }
 
     fallback () external payable {
-        _msgSender().send(msg.value);
+        payable(_msgSender()).send(msg.value);
     }
 
     function newCampaignApplication(
@@ -203,19 +205,20 @@ contract Crowdfunding is AccessControl {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(address _token) public onlyOwner {
-        if (tokenContract.controller() == address(this)) {
-            tokenContract.claimTokens(_token);
-        }
-        if (_token == 0x0) {
-            owner.transfer(this.balance);
-            return;
-        }
+    function claimTokens(address _token, address payable _recipient) public {
+        require(hasRole("ADMIN", _msgSender()), "Only ADMINs can claim tokens!");
+        // if (tokenContract.controller() == address(this)) {
+            // tokenContract.claimTokens(_token);
+        // }
+        // if (_token == 0x0) {
+        //     _recipient.transfer(this.balance);
+        //     return;
+        // }
 
-        ERC20Token token = ERC20Token(_token);
-        uint256 balance = token.balanceOf(this);
-        token.transfer(owner, balance);
-        ClaimedTokens(_token, owner, balance);
+        // IERC20 token = IERC20(_token);
+        // uint256 balance = token.balanceOf(this);
+        // token.transfer(_recipient, balance);
+        // emit ClaimedTokens(_token, _recipient, balance);
     }
 
     event ClaimedTokens(address indexed _token, address indexed _controller, uint256 _amount);

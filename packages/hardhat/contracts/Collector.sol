@@ -27,7 +27,7 @@ contract Collector is ICollector, Ownable {
     /// MODIFIERS:
 
     modifier onlyBeneficiary() {
-        if (msg.sender != _beneficiary) {
+        if (_msgSender() != _beneficiary) {
             revert OnlyBeneficiary();
         }
         _;
@@ -47,7 +47,7 @@ contract Collector is ICollector, Ownable {
 
     /// @dev Contract collects ETH and emits a collected event.
     receive() external payable {
-        emit Collected(msg.sender, msg.value);
+        emit Collected(_msgSender(), msg.value);
     }
 
     ///
@@ -55,7 +55,7 @@ contract Collector is ICollector, Ownable {
     ///
 
     /// @inheritdoc ICollector
-    function changeBeneficiary(address beneficiaryAddr) external onlyOwner {
+    function changeBeneficiary(address beneficiaryAddr) external override onlyOwner {
         if (beneficiaryAddr == address(0)) {
             revert NoAddressZero();
         }
@@ -67,15 +67,15 @@ contract Collector is ICollector, Ownable {
     ///
 
     /// @inheritdoc ICollector
-    function withdraw() external onlyBeneficiary {
-        emit Withdrawn(msg.sender, address(this).balance);
+    function withdraw() external override onlyBeneficiary {
+        emit Withdrawn(_msgSender(), address(this).balance);
         Address.sendValue(payable(_beneficiary), address(this).balance);
     }
 
     /// @inheritdoc ICollector
-    function withdrawTokens(address token) external onlyBeneficiary {
+    function withdrawTokens(address token) external override onlyBeneficiary {
         uint256 balance = IERC20(token).balanceOf(address(this));
-        emit WithdrawnTokens(token, msg.sender, balance);
+        emit WithdrawnTokens(token, _msgSender(), balance);
         SafeERC20.safeTransfer(IERC20(token), _beneficiary, balance);
     }
 
@@ -84,7 +84,7 @@ contract Collector is ICollector, Ownable {
     ///
 
     /// @inheritdoc ICollector
-    function beneficiary() external view returns (address) {
+    function beneficiary() external view override returns (address) {
         return _beneficiary;
     }
 }
