@@ -1,5 +1,5 @@
 {
-    "name": "hunterdao-victim-assistance",
+    "name": "contracts",
     "version": "1.0.0",
     "description": "",
     "scripts": {
@@ -18,8 +18,8 @@
         "LICENSE",
         "README.md"
     ],
-    "author": "Joshua Healey <healey.josh@yahoo.com>",
-    "license": "MIT",
+    "author": "@HunterDAO",
+    "license": "Apache",
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.5",
         "@nomiclabs/hardhat-etherscan": "^3.0.3",
