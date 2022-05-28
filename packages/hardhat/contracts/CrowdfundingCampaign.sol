@@ -47,7 +47,7 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     uint256 public totalCollected;
     Counters.Counter public numDonors;
     
-    address private vaultAddress;
+    address public vaultAddress;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -57,17 +57,22 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     event CampaignFailed(uint256 totalCollected);
 
     constructor(
+        uint256 _maximumFunding,
         address payable _serviceProvider
     ) {
+        maximumFunding = _maximumFunding;
+        startTime = block.timestamp;
+        endTime = startTime + campaignDuration;
         vaultAddress = address(new Collector(_serviceProvider));
+        campaignStatus = CampaignStatus.Active;
     }
 
     receive () external payable {
-        payable(_msgSender()).transfer(msg.value);
+        _donate();
     }
 
     fallback () external payable {
-        payable(_msgSender()).transfer(msg.value);
+        _donate();
     }
 
     function donate() public payable {
