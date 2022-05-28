@@ -1,11 +1,11 @@
-import { formatEther, formatUnits } from "@ethersproject/units";
+// import { formatEther, parseEther } from "@ethersproject/units";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract, ContractFactory } from "ethers";
 import { ethers } from "hardhat";
 
 import { expect } from "./chai-setup";
 
-describe("Token contract", function () {
+describe("CrowdfundingCampaign contract", function () {
 
     let Crowdfunding: ContractFactory;
     let Vault: ContractFactory;
@@ -14,15 +14,17 @@ describe("Token contract", function () {
     let owner: SignerWithAddress;
     let beneficiary: SignerWithAddress;
     let donor1: SignerWithAddress;
+    let donor2: SignerWithAddress;
+    let donor3: SignerWithAddress;
     let addrs: SignerWithAddress[];
 
     before(async function () {
-        [owner, beneficiary, donor1, ...addrs] = await ethers.getSigners();
+        [owner, beneficiary, donor1, donor2, donor3, ...addrs] = await ethers.getSigners();
 
-        Crowdfunding = await ethers.getContractFactory("Crowdfunding");
-        Vault = await ethers.getContractFactory("Vault");
+        Crowdfunding = await ethers.getContractFactory("CrowdfundingCampaign");
+        Vault = await ethers.getContractFactory("Collector");
 
-        crowdfunding = await Crowdfunding.deploy(formatUnits(2, "wei"), beneficiary.address);
+        crowdfunding = await Crowdfunding.deploy(ethers.utils.parseEther("2"), beneficiary.address);
 
         const vaultAddr = await crowdfunding.vaultAddress();
         vault = Vault.attach(vaultAddr); 
@@ -35,7 +37,7 @@ describe("Token contract", function () {
         });
         
         it("Should set the right maximum funding", async function () {
-            expect(await crowdfunding.maximumFunding()).to.equal(formatUnits(2, "wei"));
+            expect(await crowdfunding.maximumFunding()).to.equal(ethers.utils.parseEther("2.0"));
         });
 
         it("Should set the right beneficiary", async function () {
@@ -54,28 +56,34 @@ describe("Token contract", function () {
 
     describe("Donations", function () {
 
-        it("Should return ether sent without calling donate function", async function () {
-
+        it("Should accept ether sent without a specific function", async function () {
+            await donor1.sendTransaction({ value: ethers.utils.parseEther("0.25"), to: crowdfunding.address });
+            expect(await crowdfunding.getNumberOfDonors()).to.equal(BigNumber.from(1));
+            expect(await crowdfunding.getDonorContribution(donor1.address)).to.equal(ethers.utils.parseEther("0.25"));
+            expect(await vault.connect(beneficiary).getBalance()).to.equal(ethers.utils.parseEther("0.25"));
         });
 
-        it("Should transfer tokens between accounts", async function () {
-
-        });
-
-        it("Should transfer tokens between accounts", async function () {
-
-        });
-        
-        it("Should transfer tokens between accounts", async function () {
-
-        });
-
-        it("Should update balances after transfers", async function () {
+        it("Should accept ether sent via the donate function", async function () {
+            await crowdfunding.connect(donor2).donate({ value: ethers.utils.parseEther("0.25") })
+            expect(await crowdfunding.getNumberOfDonors()).to.equal(BigNumber.from(2));
+            expect(await crowdfunding.getDonorContribution(donor2.address)).to.equal(ethers.utils.parseEther("0.25"));
+            expect(await vault.connect(beneficiary).getBalance()).to.equal(ethers.utils.parseEther("0.5"));
 
         });
     });
 
     describe("End of Campaign", function () {
+
+        it("Should finalize the campaign when the maximumFunding value is reached", async function () {
+            await crowdfunding.connect(donor3).donate({ value: ethers.utils.parseEther("1.5") })
+            expect(await crowdfunding.getNumberOfDonors()).to.equal(BigNumber.from(3));
+            expect(await crowdfunding.getDonorContribution(donor3.address)).to.equal(ethers.utils.parseEther("1.5"));
+            expect(await vault.connect(beneficiary).getBalance()).to.equal(ethers.utils.parseEther("2.0"));
+        });
+
+        it("Should revert when campaign is over", async function () {
+            await expect(crowdfunding.connect(addrs[0]).donate({ value: ethers.utils.parseEther("0.1") })).to.be.reverted;
+        });
 
     });
 });

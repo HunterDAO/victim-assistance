@@ -10,6 +10,10 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import "./Collector.sol";
 
+        // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
+        // set(donorContribution, _msgSender(), totalContribution);
+        // return get(donorContribution, _donorAddress);
+
 /**
  * @title Campaign
  * @author Alpine-lines (Josh Healey)
