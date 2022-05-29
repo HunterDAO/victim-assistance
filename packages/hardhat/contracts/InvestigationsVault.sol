@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.4;
 
+import './common/PausableFinalizable.sol';
+import './interfaces/IHuntVault.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
-import './common/PausableFinalizable.sol';
-import './interfaces/IDefenseVault.sol';
 
 /**
-  * @title DefenseVault
+  * @title InvestigationsVault
   * @author HunterDAO
   * @notice Credit: Giveth developers for ICollector.sol
   * @notice A simple conditional escrow contract w/ DeFi yield farming that allows 
   *         the beneficiary to withdraw collected ETH and ERC-20 tokens.
   */
-contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinalizable {
+contract InvestigationsVault is IHuntVault, AccessControlEnumerable, PausableFinalizable {
 
     error NoAddressZero();
 
@@ -45,7 +45,7 @@ contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinaliz
         emit Collected(_msgSender(), msg.value);
     }
 
-    function unlockFunds() external whenActiveAndPaused override {
+    function unlockFunds() external whenActiveAndPaused {
         _checkRole(CAMPAIGN);
         _imposeFee();
         _unpause();

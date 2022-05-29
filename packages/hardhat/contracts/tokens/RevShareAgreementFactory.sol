@@ -1,44 +1,50 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "./RevShareAgreement.sol";
 import '@openzeppelin/contracts/utils/Address.sol';
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./CrowdfundingCampaign.sol";
 
-contract CrowdfundingCampaignFactory is Pausable, AccessControl {
+contract RevShareAgreementFactory is Pausable, AccessControl {
 
     using Address for address;
     using Counters for Counters.Counter;
 
-    string public constant title = "CrowdfudingCampaignFactory";
+    string public constant title = "RevShareAgreementFactory";
 
-    bytes32 public constant DEPLOYER = keccak256("DEPLOYER");
+    bytes32 public constant DEPLOYER = keccak256("DEPLOYER_ROLE");
     bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
-
-    address payable daoTreasury;
 
     Counters.Counter private numDeployed;
 
     constructor(
         address _roleAdmin,
-        address _daoExecutorAddress,
-        address payable _daoTreasury
+        address _daoExecutorAddress
     ) {
-        _grantRole(DEFAULT, _roleAdmin);
-        _grantRole(DEPLOYER, _daoExecutorAddress);
+        _setupRole(DEFAULT, _roleAdmin);
+        _setupRole(DEPLOYER, _daoExecutorAddress);
     }
 
-    function deployNewCampaign(
-        uint256 _maximumFunding,
-        address payable _beneficiary
+    function deployNewRevShare(
+        string memory _projectName,
+        uint256 _orgFee,
+        uint256 _totalContributed,
+        address payable _orgAddress,
+        address payable _beneficiary,
+        address _adminAddress,
+        bool _releaseOnTransfer
     ) public returns (address) {
         _checkRole(DEPLOYER);
-        address agreementAddr = address(new CrowdfundingCampaign(
-            _maximumFunding,
+        address agreementAddr = address(new RevShareAgreement(
+            _projectName,
+            _orgFee,
+            _totalContributed,
+            _orgAddress,
             _beneficiary,
-            daoTreasury
+            _adminAddress,
+            _releaseOnTransfer
         ));
         numDeployed.increment();
         return agreementAddr;

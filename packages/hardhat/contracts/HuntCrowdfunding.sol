@@ -1,13 +1,13 @@
 pragma solidity ^0.8.4;
 // SPDX-License-dIdentifier: MIT
 
+import "./common/PausableFinalizable.sol";
+import "./InvestigationsVault.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "./common/PausableFinalizable.sol";
-import "./DefenseVault.sol";
 
     // TODO: Support arbitrary ERC20s
     //
@@ -29,7 +29,7 @@ import "./DefenseVault.sol";
  * for financial assistance funding private investigations, or asset recovery
  * services, or cybersecurity provdIded by the HunterDAO or partner DAOs / firms.
  */
-contract CrowdfundingCampaign is Ownable, PausableFinalizable {
+contract HuntCrowdfunding is Ownable, PausableFinalizable {
 
     using SafeMath for uint256;
     using Address for address;
@@ -53,7 +53,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
 
     Counters.Counter public numDonors;
     
-    DefenseVault defenseVault;
+    InvestigationsVault investigationsVault;
     address public beneficiary;
     
     mapping(address => uint256) internal donorContribution;
@@ -72,7 +72,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
-        defenseVault = new DefenseVault(_beneficiary, _daoTreasury);
+        investigationsVault = new InvestigationsVault(_beneficiary, _daoTreasury);
         campaignStatus = CampaignStatus.Active;
     }
 
@@ -85,7 +85,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
     }
 
     function getVaultAddress() external view returns (address) {
-        return address(defenseVault);
+        return address(investigationsVault);
     }
 
     function getNumberOfDonors() public view returns (uint256) {
@@ -126,7 +126,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
         donorContribution[_msgSender()] += sendValue;
 
         //Send the ether to the vault
-        payable(defenseVault).transfer(sendValue);
+        payable(investigationsVault).transfer(sendValue);
         numDonors.increment();
         emit DonationReceived(_msgSender(), sendValue);
     }
@@ -134,7 +134,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
     function _finalizeCampaign() internal {
         require(block.timestamp >= endTime || totalCollected >= maximumFunding, "Campaign should remain active!");
 
-        // defenseVault.unlockFunds();
+        // investigationsVault.unlockFunds();
         
         if (totalCollected >= maximumFunding) {
             emit CampaignSucceeded(totalCollected);

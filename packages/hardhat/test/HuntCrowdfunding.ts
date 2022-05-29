@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 
 import { expect } from "./chai-setup";
 
-describe("CrowdfundingCampaign contract", function () {
+describe("HuntCrowdfunding contract", function () {
 
     let Crowdfunding: ContractFactory;
     let Vault: ContractFactory;
@@ -22,8 +22,8 @@ describe("CrowdfundingCampaign contract", function () {
     before(async function () {
         [owner, daoTreasury, beneficiary, donor1, donor2, donor3, ...addrs] = await ethers.getSigners();
 
-        Crowdfunding = await ethers.getContractFactory("CrowdfundingCampaign");
-        Vault = await ethers.getContractFactory("DefenseVault");
+        Crowdfunding = await ethers.getContractFactory("HuntCrowdfunding");
+        Vault = await ethers.getContractFactory("InvestigationsVault");
 
         crowdfunding = await Crowdfunding.deploy(
             ethers.utils.parseEther("2"), 

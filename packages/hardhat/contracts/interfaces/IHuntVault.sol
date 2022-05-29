@@ -7,7 +7,7 @@ pragma solidity ^0.8.4;
   * @notice Credit: Giveth developers for ICollector.sol
   * @notice Interface of the DefenseVault contract.
   */
-interface IDefenseVault {
+interface IHuntVault {
 
     /**
       * @notice Add an approved spender for beneficiary.
@@ -42,11 +42,6 @@ interface IDefenseVault {
       * @return Number of the beneficiary approved spenders.
       */
     function numBeneficiaries() external view returns (uint256);
-
-    /**
-      * @notice Calls the PausableAndFinalizable contracts _unpause() function.
-      */
-    function unlockFunds() external;
 
     /**
       * @notice Withdraw all the collected ETH.

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -55,7 +54,7 @@ contract DonorRewardsNFT is
     }
 
     function safeMint(address to, string memory _tokenURI) public whenNotPaused {
-        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be CrowdfundingCampaign contract or admin!");
+        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be HuntCrowdfunding contract or admin!");
         _safeMint(to, _tokenIdCounter.current());
         _setTokenURI(_tokenIdCounter.current(), _tokenURI);
         _tokenIdCounter.increment();
@@ -65,7 +64,7 @@ contract DonorRewardsNFT is
         public
         whenNotPaused 
     {
-        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be CrowdfundingCampaign contract or admin!");
+        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be HuntCrowdfunding contract or admin!");
         _setTokenURI(tokenId, _tokenURI);
     }
 
