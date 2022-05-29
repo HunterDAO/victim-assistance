@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+// import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 /***
@@ -34,6 +33,7 @@ contract DonorRewardsNFT is
     ERC721,
     ERC721Enumerable,
     ERC721URIStorage,
+    // ERC721Votes,
     Pausable,
     AccessControl
 {
@@ -53,7 +53,7 @@ contract DonorRewardsNFT is
         _setupRole(CAMPAIGN, _daoExecutor);
     }
 
-    function safeMint(address to, string memory _tokenURI) public {
+    function safeMint(address to, string memory _tokenURI) public whenNotPaused {
         _checkRole(CAMPAIGN);
         _safeMint(to, _tokenIdCounter.current());
         _setTokenURI(_tokenIdCounter.current(), _tokenURI);
@@ -62,17 +62,18 @@ contract DonorRewardsNFT is
 
     function updateTokenURI(uint256 tokenId, string memory _tokenURI)
         public
+        whenNotPaused 
     {
         _checkRole(ADMIN);
         _setTokenURI(tokenId, _tokenURI);
     }
 
-    function pause() public  {
+    function pause() public whenNotPaused {
         _checkRole(ADMIN);
         _pause();
     }
 
-    function unpause() public  {
+    function unpause() public whenPaused {
         _checkRole(ADMIN);
         _unpause();
     }
@@ -108,7 +109,12 @@ contract DonorRewardsNFT is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable, AccessControl)
+        override(
+            ERC721, 
+            ERC721Enumerable, 
+            // ERC721Votes, 
+            AccessControl
+        )
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

@@ -59,5 +59,8 @@
     },
     "mocha": {
         "timeout": 10000000
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^4.6.0"
     }
 }
