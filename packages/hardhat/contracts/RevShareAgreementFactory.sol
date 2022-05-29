@@ -14,7 +14,7 @@ contract RevShareAgreementFactory is Pausable, AccessControl {
 
     string public constant title = "RevShareAgreementFactory";
 
-    bytes32 public constant DEPLOYER = keccak256("DEPLOYER");
+    bytes32 public constant DEPLOYER = keccak256("DEPLOYER_ROLE");
     bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
 
     Counters.Counter private numDeployed;

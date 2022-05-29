@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.4;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 import './interfaces/ICollector.sol';
-
-/// Must be called by the beneficiary address
-error OnlyBeneficiary();
 
 /// Must not be address zero;
 error NoAddressZero();
@@ -15,48 +12,51 @@ error NoAddressZero();
 /// @title Collector
 /// @author Giveth developers
 /// @notice A simple collection contract that allows the beneficiary to withdraw collected ETH and ERC-20 tokens.
-contract Collector is ICollector, Ownable {
+contract Collector is ICollector, AccessControlEnumerable {
 
-    address internal _beneficiary;
-
-    modifier onlyBeneficiary() {
-        if (_msgSender() != _beneficiary) {
-            revert OnlyBeneficiary();
-        }
-        _;
-    }
+    bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
+    bytes32 public constant BENEFICIARY = keccak256("BENEFICIARY_ROLE");
 
     constructor(address payable beneficiaryAddr) {
-        _beneficiary = beneficiaryAddr;
+        grantRole(DEFAULT, _msgSender());
+        _setupRole(BENEFICIARY, beneficiaryAddr);
     }
 
     receive() external payable {
         emit Collected(_msgSender(), msg.value);
     }
 
-    function changeBeneficiary(address beneficiaryAddr) external override onlyOwner {
-        if (beneficiaryAddr == address(0)) {
+    function changeBeneficiary(address newBeneficiary) external override {
+        require(hasRole(DEFAULT, _msgSender()) || hasRole(BENEFICIARY, _msgSender()), "Must be beneficiary or admin!");
+        if (newBeneficiary == address(0)) {
             revert NoAddressZero();
         }
-        _beneficiary = beneficiaryAddr;
+        address prevBeneficiary = getRoleMember(BENEFICIARY, 0);
+        revokeRole(BENEFICIARY, prevBeneficiary);
+        grantRole(BENEFICIARY, newBeneficiary);
     }
 
-    function withdraw() external override onlyBeneficiary {
+    function withdraw() external override {
+        _checkRole(BENEFICIARY);
+        address beneficiary = getRoleMember(BENEFICIARY, 0);
         emit Withdrawn(_msgSender(), address(this).balance);
-        Address.sendValue(payable(_beneficiary), address(this).balance);
+        Address.sendValue(payable(beneficiary), address(this).balance);
     }
 
-    function withdrawTokens(address token) external override onlyBeneficiary {
+    function withdrawTokens(address token) external override {
+        _checkRole(BENEFICIARY);
+        address beneficiary = getRoleMember(BENEFICIARY, 0);
         uint256 balance = IERC20(token).balanceOf(address(this));
         emit WithdrawnTokens(token, _msgSender(), balance);
-        SafeERC20.safeTransfer(IERC20(token), _beneficiary, balance);
+        SafeERC20.safeTransfer(IERC20(token), beneficiary, balance);
     }
 
     function beneficiary() external view override returns (address) {
-        return _beneficiary;
+        return getRoleMember(BENEFICIARY, 0);
     }
 
-    function getBalance() public view onlyBeneficiary returns (uint) {
+    function getBalance() public view returns (uint) {
+        _checkRole(BENEFICIARY);
         return address(this).balance;
     }
 }

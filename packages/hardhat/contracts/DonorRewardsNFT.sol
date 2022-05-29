@@ -39,8 +39,8 @@ contract DonorRewardsNFT is
 {
     using Counters for Counters.Counter;
 
-    bytes32 public constant DEFAULT = keccak256("DEFAULT");
-    bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN");
+    bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
+    bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN_ROLE");
 
     Counters.Counter private _tokenIdCounter;
 

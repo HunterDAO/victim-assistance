@@ -22,10 +22,10 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * This can be modified by setting property {_releaseOnTransfer} to false.
  */
 abstract contract ERC721PaymentSplitter is ERC721, ERC721Enumerable, AccessControl {
-    
+
     using Counters for Counters.Counter;
     
-    bytes32 public constant ADMIN = keccak256("ADMIN");
+    bytes32 public constant ADMIN = keccak256("ADMIN_ROLE");
     
     event PaymentReleased(address to, uint256 amount);
     event ERC20PaymentReleased(IERC20 indexed token, address to, uint256 amount);
