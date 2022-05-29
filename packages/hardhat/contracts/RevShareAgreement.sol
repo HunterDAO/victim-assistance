@@ -17,7 +17,6 @@ contract RevShareAgreement is ERC721PaymentSplitter {
         address adminAddress,
         bool releaseOnTransfer
     ) ERC721PaymentSplitter(_projectName, "HDREV", adminAddress) {
-        // ERC721(_projectName, "HDREV")
         _projectName = _projectName;
         _orgFee = orgFee;
         _maxPayout = totalContributed;
