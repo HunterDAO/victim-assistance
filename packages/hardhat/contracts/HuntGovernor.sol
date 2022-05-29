@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: Apache
 pragma solidity ^0.8.4;
 
+import "./governance/HuntGovernorVotes.sol";
+import "./governance/HuntGovernorQuorum.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @custom:security-contact admin@hunterdao.io
-contract HunterGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable, GovernorTimelockControlUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract HunterGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControlUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(IVotesUpgradeable _token, TimelockControllerUpgradeable _timelock)
+    function initialize(HuntToken hunt, TimelockControllerUpgradeable _timelock)
         initializer public
     {
         __Governor_init("HunterGovernor");
         __GovernorSettings_init(6570 /* 6570 block */, 19636 /* 3 days */, 5);
         __GovernorCountingSimple_init();
-        __GovernorVotes_init(_token);
-        __GovernorVotesQuorumFraction_init(20);
+        __HuntGovernorVotes_init(hunt);
+        __HuntGovernorQuorum_init(15, hunt.getNumVoters(), hunt);
         __GovernorTimelockControl_init(_timelock);
         __Ownable_init();
         __UUPSUpgradeable_init();
@@ -60,7 +60,7 @@ contract HunterGovernor is Initializable, GovernorUpgradeable, GovernorSettingsU
     function quorum(uint256 blockNumber)
         public
         view
-        override(IGovernorUpgradeable, GovernorVotesQuorumFractionUpgradeable)
+        override(IGovernorUpgradeable, HuntGovernorQuorum)
         returns (uint256)
     {
         return super.quorum(blockNumber);
@@ -90,6 +90,30 @@ contract HunterGovernor is Initializable, GovernorUpgradeable, GovernorSettingsU
         returns (uint256)
     {
         return super.proposalThreshold();
+    }
+
+    function _quorumReached(
+        uint256 proposalId
+    ) internal view override(GovernorUpgradeable, GovernorCountingSimpleUpgradeable) returns (bool) {
+
+    }
+
+    function _voteSucceeded(
+        uint256 proposalId
+    ) internal view override(GovernorUpgradeable, GovernorCountingSimpleUpgradeable) returns (bool) {
+
+    }
+
+    function _getVotes(
+        address account,
+        uint256 blockNumber,
+        bytes memory params
+    ) internal view override(GovernorUpgradeable, HuntGovernorVotes, GovernorVotesUpgradeable) returns (uint256) {
+        return super._getVotes(
+            account,
+            blockNumber,
+            params
+        );
     }
 
     function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
