@@ -5,13 +5,10 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "./Collector.sol";
+import "./common/PausableFinalizable.sol";
+import "./DefenseVault.sol";
 
-        // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
-        // set(donorContribution, _msgSender(), totalContribution);
-        // return get(donorContribution, _donorAddress);
 
 /**
  * @title Campaign
@@ -20,11 +17,13 @@ import "./Collector.sol";
  * for financial assistance funding private investigations, or asset recovery
  * services, or cybersecurity provdIded by the HunterDAO or partner DAOs / firms.
  */
-contract CrowdfundingCampaign is Ownable, Pausable {
+contract CrowdfundingCampaign is Ownable, PausableFinalizable {
 
     using SafeMath for uint256;
     using Address for address;
     using Counters for Counters.Counter;
+
+    uint256 public constant campaignDuration = 1814400;
 
     enum CampaignStatus {
         Active,
@@ -32,18 +31,22 @@ contract CrowdfundingCampaign is Ownable, Pausable {
         Failed
     }
 
+    CampaignStatus private campaignStatus;
+
+    // TODO: Support arbitrary ERC20s
+    //
     // struct Donor {
     //     address donorAddress;
     //     uint256 contribution;
     //     IERC20 token;
     //     uint256 erc20Contribution;
-    // } TODO: Support arbitrary ERC20s
+    // } 
+    //
+    // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
+    // set(donorContribution, _msgSender(), totalContribution);
+    // return get(donorContribution, _donorAddress);
 
-    uint256 public constant campaignDuration = 1814400;
-
-    CampaignStatus private campaignStatus;
-
-    uint256 private startTime;
+    uint256 public startTime;
     uint256 public endTime;
     
     uint256 public maximumFunding;
@@ -51,6 +54,7 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     Counters.Counter public numDonors;
     
     address public vaultAddress;
+    address public beneficiary;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -61,12 +65,14 @@ contract CrowdfundingCampaign is Ownable, Pausable {
 
     constructor(
         uint256 _maximumFunding,
-        address payable _serviceProvider
+        address payable _beneficiary,
+        address payable _daoTreasury
     ) {
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
-        vaultAddress = address(new Collector(_serviceProvider));
+        vaultAddress = address(new DefenseVault(_beneficiary, _daoTreasury));
+        beneficiary = _beneficiary;
         campaignStatus = CampaignStatus.Active;
     }
 

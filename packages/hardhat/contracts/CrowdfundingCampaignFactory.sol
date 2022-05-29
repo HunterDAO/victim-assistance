@@ -17,11 +17,14 @@ contract CrowdfundingCampaignFactory is Pausable, AccessControl {
     bytes32 public constant DEPLOYER = keccak256("DEPLOYER");
     bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
 
+    address payable daoTreasury;
+
     Counters.Counter private numDeployed;
 
     constructor(
         address _roleAdmin,
-        address _daoExecutorAddress
+        address _daoExecutorAddress,
+        address payable _daoTreasury
     ) {
         _setupRole(DEFAULT, _roleAdmin);
         _setupRole(DEPLOYER, _daoExecutorAddress);
@@ -29,12 +32,13 @@ contract CrowdfundingCampaignFactory is Pausable, AccessControl {
 
     function deployNewCampaign(
         uint256 _maximumFunding,
-        address payable _serviceProvider
+        address payable _beneficiary
     ) public returns (address) {
         _checkRole(DEPLOYER);
         address agreementAddr = address(new CrowdfundingCampaign(
             _maximumFunding,
-            _serviceProvider
+            _beneficiary,
+            daoTreasury
         ));
         numDeployed.increment();
         return agreementAddr;

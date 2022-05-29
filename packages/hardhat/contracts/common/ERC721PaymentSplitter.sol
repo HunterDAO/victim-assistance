@@ -43,8 +43,8 @@ abstract contract ERC721PaymentSplitter is ERC721, ERC721Enumerable, AccessContr
 
     uint256 internal _orgFee; 
     uint256 internal _maxPayout; 
-    uint256 internal _totalRevenue;
-    uint256 internal _pendingRevenue;
+    uint256 public _totalRevenue;
+    uint256 public _pendingRevenue;
 
 
     // struct Certificate {
