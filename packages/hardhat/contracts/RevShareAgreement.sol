@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "./external/ERC721PaymentSplitter.sol";
+import "./common/ERC721PaymentSplitter.sol";
 
 contract RevShareAgreement is ERC721PaymentSplitter {
 

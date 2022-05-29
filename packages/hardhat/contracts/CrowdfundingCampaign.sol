@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
-
 import "./Collector.sol";
 
         // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
@@ -87,7 +86,7 @@ contract CrowdfundingCampaign is Ownable, Pausable {
         return donorContribution[_donorAddress];
     }
 
-    function finalizeCampaign() public onlyOwner() {
+    function finalizeCampaign() public onlyOwner {
         _finalizeCampaign();
     } 
 
@@ -141,7 +140,7 @@ contract CrowdfundingCampaign is Ownable, Pausable {
     ///  sent tokens to this contract.
     /// @param _token The address of the token contract that you want to recover
     ///  set to 0 in case you want to extract ether.
-    function claimTokens(address _token, address payable _recipient) public onlyOwner() {
+    function claimTokens(address _token, address payable _recipient) public onlyOwner {
         // if (tokenContract.controller() == address(this)) {
             // tokenContract.claimTokens(_token);
         // }

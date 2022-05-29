@@ -39,7 +39,7 @@ contract DonorRewardsNFT is
 {
     using Counters for Counters.Counter;
 
-    bytes32 public constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
+    bytes32 public constant ADMIN = keccak256("DEFAULT_ADMIN_ROLE");
     bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN_ROLE");
 
     Counters.Counter private _tokenIdCounter;
@@ -49,7 +49,7 @@ contract DonorRewardsNFT is
     constructor(
         address _daoExecutor
     ) ERC721("HunterDAO Donor Rewards", "HDDR") {
-        grantRole(DEFAULT, _daoExecutor);
+        grantRole(ADMIN, _daoExecutor);
         _setupRole(CAMPAIGN, _daoExecutor);
     }
 
@@ -63,17 +63,17 @@ contract DonorRewardsNFT is
     function updateTokenURI(uint256 tokenId, string memory _tokenURI)
         public
     {
-        _checkRole(DEFAULT);
+        _checkRole(ADMIN);
         _setTokenURI(tokenId, _tokenURI);
     }
 
     function pause() public  {
-        _checkRole(DEFAULT);
+        _checkRole(ADMIN);
         _pause();
     }
 
     function unpause() public  {
-        _checkRole(DEFAULT);
+        _checkRole(ADMIN);
         _unpause();
     }
 
