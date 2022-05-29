@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "./external/ERC721PaymentSplitter.sol";
 
 contract RevShareAgreement is ERC721PaymentSplitter {
 
-    
     string public projectName;
 
     constructor(
@@ -26,10 +26,15 @@ contract RevShareAgreement is ERC721PaymentSplitter {
         _releaseOnTransfer = releaseOnTransfer;
     }
 
-    function adminMassPayout() public {
-        require(hasRole(ADMIN, _msgSender()), "Only addresses with admin priveledges can initiate a MassPayout");
+    function adminMassPayout() public onlyAdmin {
         for (uint256 i = 0; i < totalSupply(); i++) {
             _sendShares(i);
+        }
+    }
+
+    function adminMassPayoutERC20(IERC20 token) public onlyAdmin {
+        for (uint256 i = 0; i < totalSupply(); i++) {
+            _sendShares(token, i);
         }
     }
 
@@ -37,5 +42,11 @@ contract RevShareAgreement is ERC721PaymentSplitter {
         require(balanceOf(_msgSender()) < 1, "Only certificate owner can initiate withdrawl");
         require(balanceOf(_msgSender()) > 1, "Address can only own 1 certificate initiate withdrawl");
         _sendShares(_certificateOf[_msgSender()]);
+    }
+
+    function donorWithdrawlERC20(IERC20 token) public {
+        require(balanceOf(_msgSender()) < 1, "Only certificate owner can initiate withdrawl");
+        require(balanceOf(_msgSender()) > 1, "Address can only own 1 certificate initiate withdrawl");
+        _sendShares(token, _certificateOf[_msgSender()]);
     }
 }

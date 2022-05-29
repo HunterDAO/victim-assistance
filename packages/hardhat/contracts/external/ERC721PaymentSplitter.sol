@@ -22,6 +22,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * This can be modified by setting property {_releaseOnTransfer} to false.
  */
 abstract contract ERC721PaymentSplitter is ERC721, ERC721Enumerable, AccessControl {
+    
     using Counters for Counters.Counter;
     
     bytes32 public constant ADMIN = keccak256("ADMIN");
@@ -66,6 +67,12 @@ abstract contract ERC721PaymentSplitter is ERC721, ERC721Enumerable, AccessContr
     mapping(IERC20 => mapping(uint256 => uint256)) private _erc20ReleasedForCert;
     mapping(IERC20 => uint256) private _erc20TotalRevenue;
     mapping(IERC20 => uint256) private _erc20PendingRevenue;
+
+    modifier onlyAdmin() {
+        require(hasRole(ADMIN, _msgSender()), "Only addresses with admin priveledges can initiate a MassPayout");
+        _;
+    }
+
     constructor(
         string memory _title, 
         string memory _symbol,
