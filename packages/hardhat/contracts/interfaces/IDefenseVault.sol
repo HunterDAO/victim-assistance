@@ -44,6 +44,11 @@ interface IDefenseVault {
     function numBeneficiaries() external view returns (uint256);
 
     /**
+      * @notice Calls the PausableAndFinalizable contracts _unpause() function.
+      */
+    function unlockFunds() external;
+
+    /**
       * @notice Withdraw all the collected ETH.
       * @dev Can only be called by the beneficiary.
       */

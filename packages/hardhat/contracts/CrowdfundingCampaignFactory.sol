@@ -26,8 +26,8 @@ contract CrowdfundingCampaignFactory is Pausable, AccessControl {
         address _daoExecutorAddress,
         address payable _daoTreasury
     ) {
-        _setupRole(DEFAULT, _roleAdmin);
-        _setupRole(DEPLOYER, _daoExecutorAddress);
+        _grantRole(DEFAULT, _roleAdmin);
+        _grantRole(DEPLOYER, _daoExecutorAddress);
     }
 
     function deployNewCampaign(

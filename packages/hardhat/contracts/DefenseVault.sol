@@ -30,11 +30,14 @@ contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinaliz
 		_;
 	}
 
-    constructor(address payable _beneficiaryAddr, address payable _daoTreasury) {
+    constructor(
+        address payable _beneficiaryAddr,
+        address payable _daoTreasury
+    ) {
         daoTreasury = _daoTreasury;
-        grantRole(CAMPAIGN, _msgSender());
-        grantRole(DEFAULT, _beneficiaryAddr);
-        _setupRole(BENEFICIARY, _beneficiaryAddr);
+        _grantRole(DEFAULT, _beneficiaryAddr);
+        _grantRole(CAMPAIGN, _msgSender());
+        _grantRole(BENEFICIARY, _beneficiaryAddr);
         _pause();
     }
     
@@ -42,24 +45,24 @@ contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinaliz
         emit Collected(_msgSender(), msg.value);
     }
 
-    function unlockFunds() external whenPaused {
+    function unlockFunds() external whenActiveAndPaused override {
         _checkRole(CAMPAIGN);
         _imposeFee();
         _unpause();
     }
 
-    function retireVault() external whenNotPaused whenActive {
+    function retireVault() external whenActiveAndNotPaused {
         _finalize();
     }
 
-    function withdraw() external whenNotPaused whenActive override {
+    function withdraw() external whenActiveAndNotPaused override {
         _checkRole(BENEFICIARY);
         address beneficiary = getRoleMember(BENEFICIARY, 0);
         emit Withdrawn(_msgSender(), address(this).balance);
         Address.sendValue(payable(beneficiary), address(this).balance);
     }
 
-    function withdrawTokens(address token) external whenNotPaused whenActive override {
+    function withdrawTokens(address token) external whenActiveAndNotPaused override {
         _checkRole(BENEFICIARY);
         address beneficiary = getRoleMember(BENEFICIARY, 0);
         uint256 balance = IERC20(token).balanceOf(address(this));
@@ -75,24 +78,24 @@ contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinaliz
         return getRoleMemberCount(BENEFICIARY);
     }
 
-    function addBeneficiary(address newBeneficiary) external whenNotPaused whenActive override {
-        require(hasRole(DEFAULT, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
+    function addBeneficiary(address newBeneficiary) external whenActiveAndNotPaused override {
+        require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (newBeneficiary == address(0)) {
             revert NoAddressZero();
         }
         grantRole(BENEFICIARY, newBeneficiary);
     }
 
-    function removeBeneficiary(address oldBeneficiary) external whenNotPaused whenActive override {
-        require(hasRole(DEFAULT, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
+    function removeBeneficiary(address oldBeneficiary) external whenActiveAndNotPaused override {
+        require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (oldBeneficiary == address(0)) {
             revert NoAddressZero();
         }
         revokeRole(BENEFICIARY, oldBeneficiary);
     }
 
-    function replaceBeneficiary(address newBeneficiary, address oldBeneficiary) external whenNotPaused whenActive override {
-        require(hasRole(DEFAULT, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
+    function replaceBeneficiary(address newBeneficiary, address oldBeneficiary) external whenActiveAndNotPaused override {
+        require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (oldBeneficiary == address(0) || newBeneficiary == address(0)) {
             revert NoAddressZero();
         }
@@ -105,7 +108,7 @@ contract DefenseVault is IDefenseVault, AccessControlEnumerable, PausableFinaliz
         return address(this).balance;
     }
 
-    function _imposeFee() internal whenPaused whenActive itself {
+    function _imposeFee() internal whenActiveAndPaused itself {
         address defenseVault = address(this);
         uint256 feeValue = defenseVault.balance * uint256(crowdfundFee);
         payable(daoTreasury).transfer(feeValue);

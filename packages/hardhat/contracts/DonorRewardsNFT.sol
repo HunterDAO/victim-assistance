@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -44,17 +45,17 @@ contract DonorRewardsNFT is
 
     Counters.Counter private _tokenIdCounter;
 
-    mapping(uint256 => string) private _tokenURIs;
+    mapping(uint256 => string) public _tokenURIs;
 
     constructor(
         address _daoExecutor
     ) ERC721("HunterDAO Donor Rewards", "HDDR") {
-        grantRole(ADMIN, _daoExecutor);
-        _setupRole(CAMPAIGN, _daoExecutor);
+        _setupRole(ADMIN, _daoExecutor);
+        _setupRole(CAMPAIGN, _msgSender());
     }
 
     function safeMint(address to, string memory _tokenURI) public whenNotPaused {
-        _checkRole(CAMPAIGN);
+        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be CrowdfundingCampaign contract or admin!");
         _safeMint(to, _tokenIdCounter.current());
         _setTokenURI(_tokenIdCounter.current(), _tokenURI);
         _tokenIdCounter.increment();
@@ -64,7 +65,7 @@ contract DonorRewardsNFT is
         public
         whenNotPaused 
     {
-        _checkRole(ADMIN);
+        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be CrowdfundingCampaign contract or admin!");
         _setTokenURI(tokenId, _tokenURI);
     }
 
@@ -94,6 +95,7 @@ contract DonorRewardsNFT is
     }
 
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal override {
+        require(_exists(tokenId), "Token does not exist!");
         _tokenURIs[tokenId] = _tokenURI;
     }
 
@@ -103,6 +105,7 @@ contract DonorRewardsNFT is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
+        require(_exists(tokenId), "Token does not exist!");
         return _tokenURIs[tokenId];
     }
 

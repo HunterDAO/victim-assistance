@@ -11,6 +11,7 @@ describe("CrowdfundingCampaign contract", function () {
     let Vault: ContractFactory;
     let crowdfunding: Contract;
     let vault: Contract;
+    let daoTreasury: SignerWithAddress;
     let owner: SignerWithAddress;
     let beneficiary: SignerWithAddress;
     let donor1: SignerWithAddress;
@@ -19,14 +20,18 @@ describe("CrowdfundingCampaign contract", function () {
     let addrs: SignerWithAddress[];
 
     before(async function () {
-        [owner, beneficiary, donor1, donor2, donor3, ...addrs] = await ethers.getSigners();
+        [owner, daoTreasury, beneficiary, donor1, donor2, donor3, ...addrs] = await ethers.getSigners();
 
         Crowdfunding = await ethers.getContractFactory("CrowdfundingCampaign");
-        Vault = await ethers.getContractFactory("Collector");
+        Vault = await ethers.getContractFactory("DefenseVault");
 
-        crowdfunding = await Crowdfunding.deploy(ethers.utils.parseEther("2"), beneficiary.address);
+        crowdfunding = await Crowdfunding.deploy(
+            ethers.utils.parseEther("2"), 
+            beneficiary.address,
+            daoTreasury.address
+        );
 
-        const vaultAddr = await crowdfunding.vaultAddress();
+        const vaultAddr = await crowdfunding.getVaultAddress();
         vault = Vault.attach(vaultAddr); 
     });
 
@@ -41,7 +46,7 @@ describe("CrowdfundingCampaign contract", function () {
         });
 
         it("Should set the right beneficiary", async function () {
-            expect(await vault.beneficiary()).to.equal(beneficiary.address);
+            expect(await vault.beneficiaryAdmin()).to.equal(beneficiary.address);
         });
 
         it("Should show vault balance is 0", async function () {

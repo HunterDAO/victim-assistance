@@ -9,10 +9,22 @@ import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "./common/PausableFinalizable.sol";
 import "./DefenseVault.sol";
 
+    // TODO: Support arbitrary ERC20s
+    //
+    // struct Donor {
+    //     address donorAddress;
+    //     uint256 contribution;
+    //     IERC20 token;
+    //     uint256 erc20Contribution;
+    // } 
+    //
+    // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
+    // set(donorContribution, _msgSender(), totalContribution);
+    // return get(donorContribution, _donorAddress);
 
 /**
  * @title Campaign
- * @author Alpine-lines (Josh Healey)
+ * @author HunterDAO
  * @dev this contract is intended to handle the campaigns requesting funding
  * for financial assistance funding private investigations, or asset recovery
  * services, or cybersecurity provdIded by the HunterDAO or partner DAOs / firms.
@@ -33,27 +45,15 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
 
     CampaignStatus private campaignStatus;
 
-    // TODO: Support arbitrary ERC20s
-    //
-    // struct Donor {
-    //     address donorAddress;
-    //     uint256 contribution;
-    //     IERC20 token;
-    //     uint256 erc20Contribution;
-    // } 
-    //
-    // uint256 totalContribution = get(donorContribution, _msgSender()) + sendValue;
-    // set(donorContribution, _msgSender(), totalContribution);
-    // return get(donorContribution, _donorAddress);
-
     uint256 public startTime;
     uint256 public endTime;
     
     uint256 public maximumFunding;
     uint256 public totalCollected;
+
     Counters.Counter public numDonors;
     
-    address public vaultAddress;
+    DefenseVault defenseVault;
     address public beneficiary;
     
     mapping(address => uint256) internal donorContribution;
@@ -68,20 +68,24 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
         address payable _beneficiary,
         address payable _daoTreasury
     ) {
+        beneficiary = _beneficiary;
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
-        vaultAddress = address(new DefenseVault(_beneficiary, _daoTreasury));
-        beneficiary = _beneficiary;
+        defenseVault = new DefenseVault(_beneficiary, _daoTreasury);
         campaignStatus = CampaignStatus.Active;
     }
 
-    receive () external payable {
+    receive () external whenActiveAndNotPaused payable {
         _donate();
     }
 
-    function donate() public payable {
+    function donate() public whenActiveAndNotPaused payable {
         _donate();
+    }
+
+    function getVaultAddress() external view returns (address) {
+        return address(defenseVault);
     }
 
     function getNumberOfDonors() public view returns (uint256) {
@@ -92,7 +96,7 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
         return donorContribution[_donorAddress];
     }
 
-    function finalizeCampaign() public onlyOwner {
+    function finalizeCampaign() public whenActive onlyOwner {
         _finalizeCampaign();
     } 
 
@@ -122,13 +126,16 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
         donorContribution[_msgSender()] += sendValue;
 
         //Send the ether to the vault
-        payable(vaultAddress).transfer(sendValue);
+        payable(defenseVault).transfer(sendValue);
         numDonors.increment();
         emit DonationReceived(_msgSender(), sendValue);
     }
 
     function _finalizeCampaign() internal {
         require(block.timestamp >= endTime || totalCollected >= maximumFunding, "Campaign should remain active!");
+
+        // defenseVault.unlockFunds();
+        
         if (totalCollected >= maximumFunding) {
             emit CampaignSucceeded(totalCollected);
             _pause();
@@ -136,6 +143,8 @@ contract CrowdfundingCampaign is Ownable, PausableFinalizable {
             emit CampaignFailed(totalCollected);
             _pause();
         }
+
+        _finalize();
     }
 
     //////////

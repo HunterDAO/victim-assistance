@@ -13,6 +13,18 @@ abstract contract PausableFinalizable is Pausable {
         require(!_finalized, "Contract has been finalized!");
         _;
     }
+        
+    modifier whenActiveAndNotPaused() {
+        require(!_finalized, "Contract has been finalized!");
+        require(!paused(), "Contract is paused!");
+        _;
+    }
+
+    modifier whenActiveAndPaused() {
+        require(!_finalized, "Contract has been finalized!");
+        require(paused(), "Contract is not paused!");
+        _;
+    }
 
     modifier whenFinal() {
         require(_finalized, "Contract has been finalized!");
