@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -35,18 +35,26 @@ contract DonorRewardsNFT is
     ERC721Enumerable,
     ERC721URIStorage,
     Pausable,
-    Ownable,
-    ERC721Burnable
+    AccessControl
 {
     using Counters for Counters.Counter;
+
+    bytes32 public constant DEFAULT = keccak256("DEFAULT");
+    bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN");
 
     Counters.Counter private _tokenIdCounter;
 
     mapping(uint256 => string) private _tokenURIs;
 
-    constructor() ERC721("HunterDAO Donor Rewards", "HDDR") {}
+    constructor(
+        address _daoExecutor
+    ) ERC721("HunterDAO Donor Rewards", "HDDR") {
+        grantRole(DEFAULT, _daoExecutor);
+        _setupRole(CAMPAIGN, _daoExecutor);
+    }
 
-    function safeMint(address to, string memory _tokenURI) public onlyOwner {
+    function safeMint(address to, string memory _tokenURI) public {
+        _checkRole(CAMPAIGN);
         _safeMint(to, _tokenIdCounter.current());
         _setTokenURI(_tokenIdCounter.current(), _tokenURI);
         _tokenIdCounter.increment();
@@ -54,16 +62,18 @@ contract DonorRewardsNFT is
 
     function updateTokenURI(uint256 tokenId, string memory _tokenURI)
         public
-        onlyOwner
     {
+        _checkRole(DEFAULT);
         _setTokenURI(tokenId, _tokenURI);
     }
 
-    function pause() public onlyOwner {
+    function pause() public  {
+        _checkRole(DEFAULT);
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public  {
+        _checkRole(DEFAULT);
         _unpause();
     }
 
@@ -98,7 +108,7 @@ contract DonorRewardsNFT is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721, ERC721Enumerable, AccessControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
