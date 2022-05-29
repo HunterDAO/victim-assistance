@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-// import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/draft-ERC721VotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 /***
  * @title DonorRewardsNFT
@@ -30,25 +30,34 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  * @dev Track redepemption of revenue share withdrawl rights using bool value named revShareRedeemed.
  */
 contract DonorRewardsNFT is
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    // ERC721Votes,
-    Pausable,
-    AccessControl
+    ERC721Upgradeable,
+    ERC721EnumerableUpgradeable,
+    ERC721URIStorageUpgradeable,
+    ERC721VotesUpgradeable,
+    PausableUpgradeable,
+    AccessControlUpgradeable
 {
-    using Counters for Counters.Counter;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
     bytes32 public constant ADMIN = keccak256("DEFAULT_ADMIN_ROLE");
     bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN_ROLE");
 
-    Counters.Counter private _tokenIdCounter;
+    string private constant _name = "HunterDAO Donor Rewards";
+    string private constant _symbol = "HDDR";
+    string private constant _version = "v0.1.0";
 
+    uint256 private _numVoters;
+
+    mapping(uint256 => uint256) _numVotersCheckpoint;
     mapping(uint256 => string) public _tokenURIs;
+
+    CountersUpgradeable.Counter private _tokenIdCounter;
 
     constructor(
         address _daoExecutor
-    ) ERC721("HunterDAO Donor Rewards", "HDDR") {
+    ) initializer {
+        __ERC721_init(_name, _symbol);
+        __EIP712_init(_name, _version);
         _setupRole(ADMIN, _daoExecutor);
         _setupRole(CAMPAIGN, _msgSender());
     }
@@ -68,6 +77,20 @@ contract DonorRewardsNFT is
         _setTokenURI(tokenId, _tokenURI);
     }
 
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+        returns (string memory)
+    {
+        require(_exists(tokenId), "Token does not exist!");
+        return _tokenURIs[tokenId];
+    }
+
+    function getNumVoters() public view returns (uint256) {
+        return _numVoters;
+    }
+
     function pause() public whenNotPaused {
         _checkRole(ADMIN);
         _pause();
@@ -78,19 +101,37 @@ contract DonorRewardsNFT is
         _unpause();
     }
 
+    function _getVotingUnits(address account) internal view override returns (uint256) {
+        if (balanceOf(account) > 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) whenNotPaused {
+    ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) whenNotPaused {
+        _updateNumVoters(from, to);
         super._beforeTokenTransfer(from, to, tokenId);
     }
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721Upgradeable, ERC721VotesUpgradeable) {
+        _updateNumVoters(from, to);
+        super._afterTokenTransfer(from, to, tokenId);
+    }
 
-    function _burn(uint256 tokenId)
-        internal
-        override(ERC721, ERC721URIStorage)
-    {
-        super._burn(tokenId);
+    function _updateNumVoters(address from, address to) internal {
+        if ((balanceOf(from) - 1) == 0) {
+            _numVoters -= 1;
+        } else if (balanceOf(to) == 0) {
+            _numVoters += 1;
+        }
     }
 
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal override {
@@ -98,24 +139,19 @@ contract DonorRewardsNFT is
         _tokenURIs[tokenId] = _tokenURI;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
+    function _burn(uint256 tokenId)
+        internal
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
     {
-        require(_exists(tokenId), "Token does not exist!");
-        return _tokenURIs[tokenId];
+        super._burn(tokenId);
     }
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
         override(
-            ERC721, 
-            ERC721Enumerable, 
-            // ERC721Votes, 
-            AccessControl
+            ERC721Upgradeable, 
+            ERC721EnumerableUpgradeable, 
+            AccessControlUpgradeable
         )
         returns (bool)
     {
