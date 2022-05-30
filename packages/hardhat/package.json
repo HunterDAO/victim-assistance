@@ -63,6 +63,7 @@
         "timeout": 10000000
     },
     "dependencies": {
-        "@openzeppelin/contracts": "^4.6.0"
+        "@openzeppelin/contracts": "^4.6.0",
+        "@rari-capital/solmate": "^6.4.0"
     }
 }

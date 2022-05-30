@@ -8,8 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetFixed
 //IERC20MetadataUpgradeable
 contract HuntToken is ERC20PresetFixedSupplyUpgradeable, ERC20VotesUpgradeable {
 
-    uint256 private numVoters = 0;
-    mapping(uint256 => uint256) private numVotersCheckpoint;
+    uint256 private _numVoters = 0;
+    mapping(uint256 => uint256) private _pastNumVoters;
 
     constructor(
         string memory _name, 
@@ -27,11 +27,11 @@ contract HuntToken is ERC20PresetFixedSupplyUpgradeable, ERC20VotesUpgradeable {
     }
 
     function getNumVoters() public view returns (uint256) {
-        return numVoters;
+        return _numVoters;
     }
 
     function getPastNumVoters(uint256 fromBlock) public view returns (uint256) {
-        return numVotersCheckpoint[fromBlock];
+        return _pastNumVoters[fromBlock];
     }
 
     function _mint(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
@@ -40,7 +40,7 @@ contract HuntToken is ERC20PresetFixedSupplyUpgradeable, ERC20VotesUpgradeable {
 
     function _burn(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
         if (balanceOf(account) - amount == 0) {
-            numVoters -= 1;
+            _numVoters -= 1;
         }
         super._burn(account, amount);
     }
@@ -56,12 +56,12 @@ contract HuntToken is ERC20PresetFixedSupplyUpgradeable, ERC20VotesUpgradeable {
         address to,
         uint256 amount
     ) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        numVotersCheckpoint[block.number] = numVoters;
+        _pastNumVoters[block.number] = _numVoters;
 
         if ((balanceOf(from) - amount) == 0) {
-            numVoters -= 1;
+            _numVoters -= 1;
         } else if (balanceOf(to) == 0) {
-            numVoters += 1;
+            _numVoters += 1;
         }
 
         super._afterTokenTransfer(from, to, amount);

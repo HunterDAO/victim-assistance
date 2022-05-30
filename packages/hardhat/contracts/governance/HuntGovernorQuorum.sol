@@ -3,11 +3,13 @@
 pragma solidity ^0.8.4;
 
 import "../tokens/HuntToken.sol";
+import "../tokens/DonorRewardsNFT.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
 abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
 
     HuntToken private hunt;
+    DonorRewardsNFT private donorRewards;
 
     uint256 private _quorumDenominator;
 
@@ -24,14 +26,14 @@ abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
      * @dev Returns the quorum denominator. Defaults to 100, but may be overridden.
      */
     function quorumDenominator() public view virtual override returns (uint256) {
-        return hunt.getNumVoters();
+        return hunt.getNumVoters() + donorRewards.getNumVoters();
     }
 
     /**
      * @dev Returns the quorum for a block number, in terms of number of votes: `supply * numerator / denominator`.
      */
     function quorum(uint256 blockNumber) public view virtual override returns (uint256) {
-        return (hunt.getPastNumVoters(blockNumber) * quorumNumerator()) / quorumDenominator();
+        return ((hunt.getPastNumVoters(blockNumber) + donorRewards.getPastNumVoters(blockNumber)) * quorumNumerator()) / quorumDenominator();
     }
 
     /**

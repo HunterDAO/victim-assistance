@@ -46,9 +46,10 @@ contract DonorRewardsNFT is
     string private constant _symbol = "HDDR";
     string private constant _version = "v0.1.0";
 
-    uint256 private _numVoters;
+    uint256 private _numVoters = 0;
+    mapping(uint256 => uint256) private numVotersCheckpoint;
 
-    mapping(uint256 => uint256) _numVotersCheckpoint;
+    mapping(uint256 => uint256) _pastNumVoters;
     mapping(uint256 => string) public _tokenURIs;
 
     CountersUpgradeable.Counter private _tokenIdCounter;
@@ -91,6 +92,10 @@ contract DonorRewardsNFT is
         return _numVoters;
     }
 
+    function getPastNumVoters(uint256 fromBlock) public view returns (uint256) {
+        return _pastNumVoters[fromBlock];
+    }
+
     function pause() public whenNotPaused {
         _checkRole(ADMIN);
         _pause();
@@ -117,13 +122,16 @@ contract DonorRewardsNFT is
         _updateNumVoters(from, to);
         super._beforeTokenTransfer(from, to, tokenId);
     }
+    
+
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
-    ) internal override(ERC721Upgradeable, ERC721VotesUpgradeable) {
+        uint256 amount
+    ) internal override(ERC721Upgradeable, ERC721VotesUpgradeable) whenNotPaused {
+        _pastNumVoters[block.number] = _numVoters;
         _updateNumVoters(from, to);
-        super._afterTokenTransfer(from, to, tokenId);
+        super._afterTokenTransfer(from, to, amount);
     }
 
     function _updateNumVoters(address from, address to) internal {
