@@ -40,7 +40,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
 
     CountersUpgradeable.Counter public numDonors;
     
-    VictimAssistanceVault victimAssistanceVault;
+    VictimAssistanceVault private victimAssistanceVault;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -76,7 +76,9 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         victimAssistanceVault = new VictimAssistanceVault(_beneficiary, _daoTreasury);
     }
 
-    constructor() {}
+    constructor() {
+        disableInitializers();
+    }
 
     receive () external whenActive payable {
         _donate();

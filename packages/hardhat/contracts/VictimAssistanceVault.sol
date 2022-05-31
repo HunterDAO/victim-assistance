@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import './interfaces/IHuntVault.sol';
+import './governance/HuntRegistry.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
@@ -18,67 +19,82 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
 
     using AddressUpgradeable for address;
 
-    error NoAddressZero();
-
-    bytes32 private constant CAMPAIGN = keccak256("CAMPAIGN_ROLE");
-    bytes32 private constant DEFAULT = keccak256("DEFAULT_ADMIN_ROLE");
-    bytes32 private constant BENEFICIARY = keccak256("BENEFICIARY_ROLE");
+    bytes32 private constant CAMPAIGN_ROLE = keccak256("CAMPAIGN_ROLE_ROLE");
+    bytes32 private constant BENEFICIARY_ROLE = keccak256("BENEFICIARY_ROLE_ROLE");
 
     uint256 private constant crowdfundFee = 60;
-    address payable private daoTreasury;
+    HuntRegistry private registry;
 
-    constructor(
-        address payable _beneficiaryAddr,
-        address payable _daoTreasury
-    ) {
-        daoTreasury = _daoTreasury;
-        _grantRole(DEFAULT, _beneficiaryAddr);
-        _grantRole(CAMPAIGN, _msgSender());
-        _grantRole(BENEFICIARY, _beneficiaryAddr);
+    error NoAddressZero();
+
+    event Contribution(address donor, uint256 amount);
+    event Withdrawl(address beneficiary, uint256 amount);
+    event WithdrawlTokens(SafeERC20 token, address beneficiary, uint256 amount);
+
+    function initialize(
+        address payable _beneficiary,
+        address payable _campaign,
+        address payable _registry
+    ) public initializer  {
+        __VictimAssistanceVault_init_unchained(
+            _beneficiary,
+            _campaign,
+            _registry
+        );
+    }
+
+    function __VictimAssistanceVault_init_unchained(
+        address payable _beneficiary,
+        address payable _campaign,
+        address payable _registry
+    ) internal onlyInitializing {
+        registry.treasury() = _registry.treasury();
+        _grantRole(CAMPAIGN_ROLE, _msgSender());
+        _grantRole(BENEFICIARY_ROLE, _beneficiary);
         _pause();
+    }
+
+    constructor() {
+        disableInitializers();
     }
     
     receive() external payable {
-        emit Collected(_msgSender(), msg.value);
+        emit Contribution(_msgSender(), msg.value);
     }
 
-    function unlockFunds() external whenPaused {
-        _checkRole(CAMPAIGN);
+    function unlockFunds() external whenPaused onlyRole(CAMPAIGN_ROLE) {
         _imposeFee();
         _unpause();
     }
 
-    function retireVault() external whenNotPaused {
+    function retireVault() external whenNotPaused onlyRole(CAMPAIGN_ROLE) {
         _pause();
     }
 
-    function withdraw() external whenNotPaused override {
-        _checkRole(BENEFICIARY);
-        address beneficiary = getRoleMember(BENEFICIARY, 0);
-        emit Withdrawn(_msgSender(), address(this).balance);
+    function withdraw() external whenNotPaused override onlyRole(BENEFICIARY_ROLE) {
         Address.sendValue(payable(beneficiary), address(this).balance);
+        emit Withdrawl(_msgSender(), address(this).balance);
     }
 
     function withdrawTokens(
-        address token
+        SafeERC20 token
     ) 
         external
         whenNotPaused
         override
+        onlyRole(BENEFICIARY_ROLE)
     {
-        _checkRole(BENEFICIARY);
-        address beneficiary = getRoleMember(BENEFICIARY, 0);
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        emit WithdrawnTokens(token, _msgSender(), balance);
+        uint256 balance = token.balanceOf(address(this));
+        emit WithdrawlTokens(token, _msgSender(), balance);
         SafeERC20.safeTransfer(IERC20(token), beneficiary, balance);
     }
 
     function beneficiaryAdmin() external view override returns (address) {
-        return getRoleMember(DEFAULT, 0);
+        return getRoleMember(BENEFICIARY_ROLE, 0);
     }
 
     function numBeneficiaries() external view override returns (uint256) {
-        return getRoleMemberCount(BENEFICIARY);
+        return getRoleMemberCount(BENEFICIARY_ROLE);
     }
 
     function addBeneficiary(
@@ -88,11 +104,11 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         whenNotPaused
         override
     {
-        require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
+        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "Must be beneficiary or admin!");
         if (newBeneficiary == address(0)) {
             revert NoAddressZero();
         }
-        grantRole(BENEFICIARY, newBeneficiary);
+        grantRole(BENEFICIARY_ROLE, newBeneficiary);
     }
 
     function removeBeneficiary(
@@ -102,11 +118,11 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         whenNotPaused
         override
     {
-        require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
+        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "Must be beneficiary or admin!");
         if (oldBeneficiary == address(0)) {
             revert NoAddressZero();
         }
-        revokeRole(BENEFICIARY, oldBeneficiary);
+        revokeRole(BENEFICIARY_ROLE, oldBeneficiary);
     }
 
     function replaceBeneficiary(
@@ -121,14 +137,13 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         removeBeneficiary(oldBeneficiary);
     }
 
-    function getBalance() external view returns (uint) {
-        _checkRole(BENEFICIARY);
+    function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
     function _imposeFee() internal whenNotPaused {
         address defenseVault = address(this);
         uint256 feeValue = defenseVault.balance * uint256(crowdfundFee);
-        payable(daoTreasury).transfer(feeValue);
+        payable(registry.treasury()).transfer(feeValue);
     }
 }

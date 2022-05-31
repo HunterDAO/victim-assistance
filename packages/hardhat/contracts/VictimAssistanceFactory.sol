@@ -72,10 +72,6 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
         registry.registerVC(address(campaign), address(vault));
     }
 
-    function getNumDeployed() public view returns (uint256) {
-        return numDeployed.current();
-    }
-
     function pause() public {
         require(_hasRoleRole(PAUSER_ROLE, _msgSender()) || _hasRoleRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
         _pause();

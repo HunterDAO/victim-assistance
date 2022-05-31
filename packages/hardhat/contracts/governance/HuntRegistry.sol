@@ -31,7 +31,7 @@ contract HuntRegistry is AccessControlUpgradeable {
 	event TreasuryChanged(address treasury);
 	event FeeRegistryChanged(address feeRegistry);
 	event VictimAssistanceFactoryChanged(address victimAssistanceFactory);
-    event VictimAssistanceCampaignRegistered(address _campaign, address _vault);
+    event VictimAssistanceDeployed(address _campaign, address _vault);
 
     // event RouterChanged(address router);
 	// event DistributorChanged(address distributor);
