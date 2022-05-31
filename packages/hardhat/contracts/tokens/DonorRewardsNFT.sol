@@ -4,78 +4,64 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/draft-ERC721VotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/draft-ERC721VotesUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CheckpointsUpgradeable.sol";
 
-/***
- * @title DonorRewardsNFT
- * @author IntelliDAO
- * @notice This contract is intended to be utilized as a reward for donations made
- * to any victim defense campaign in the IntelliDAO Crowdfunding Platform. These
- * tokens will provide access to DAO membership including exclusive areas of the DAO
- * such as the crowdfunding governance processes and related channels of communication,
- * i.e. Discord, Discourse, and Colony. Similarly, discounts will be granted to token
- * holders for their purchase of any IntelliDAO-branded merchandise or in-person
- * hackathon tickets. Finally, token holders will be able to transfer the rights to
- * redeem their share of any recovered funds received by the DAO when law enforcement
- * action or private lawsuits produce victim compensation following the DAO's fee
- * collection and subsequent contributor allocation.
+/// @custom:security-contact admin@hunterdao.io
+contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, EIP712Upgradeable, ERC721VotesUpgradeable {
 
- * @dev Integrate lit protocol in victim-assistance-dapp
- * @dev Add mintgate event ticket for next upcoming IntelliDAO hackathon (in-person)
- * @dev Add the ability to track the contributorID from the RevenueAllocator.sol contract stored
- * in the originDonorAddressToContributorID mapping.
- * @dev Track redepemption of revenue share withdrawl rights using bool value named revShareRedeemed.
- */
-contract DonorRewardsNFT is
-    ERC721Upgradeable,
-    ERC721EnumerableUpgradeable,
-    ERC721URIStorageUpgradeable,
-    ERC721VotesUpgradeable,
-    PausableUpgradeable,
-    AccessControlUpgradeable
-{
     using CountersUpgradeable for CountersUpgradeable.Counter;
+    using CheckpointsUpgradeable for CheckpointsUpgradeable.History;
 
-    bytes32 public constant ADMIN = keccak256("DEFAULT_ADMIN_ROLE");
-    bytes32 public constant CAMPAIGN = keccak256("CAMPAIGN_ROLE");
+    // uint256 internal nTokens = 1;
 
-    string private constant _name = "HunterDAO Donor Rewards";
-    string private constant _symbol = "HDDR";
-    string private constant _version = "v0.1.0";
-
-    uint256 private _numVoters = 0;
-    mapping(uint256 => uint256) private numVotersCheckpoint;
-
-    mapping(uint256 => uint256) _pastNumVoters;
-    mapping(uint256 => string) public _tokenURIs;
+    uint256 internal voters = 0;
+    CheckpointsUpgradeable.History internal votersCheckpoints;
 
     CountersUpgradeable.Counter private _tokenIdCounter;
 
-    constructor(
-        address _daoExecutor
-    ) initializer {
-        __ERC721_init(_name, _symbol);
-        __EIP712_init(_name, _version);
-        _setupRole(ADMIN, _daoExecutor);
-        _setupRole(CAMPAIGN, _msgSender());
+    mapping(uint256 => string) private _tokenURIs;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    function safeMint(address to, string memory _tokenURI) public whenNotPaused {
-        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be HuntCrowdfunding contract or admin!");
-        _safeMint(to, _tokenIdCounter.current());
-        _setTokenURI(_tokenIdCounter.current(), _tokenURI);
-        _tokenIdCounter.increment();
+    function initialize() initializer public {
+        __ERC721_init("DonorRewardsNFT", "HDDR");
+        __ERC721Enumerable_init();
+        __ERC721URIStorage_init();
+        __Pausable_init();
+        __Ownable_init();
+        __EIP712_init("DonorRewardsNFT", "1");
+        __ERC721Votes_init();
     }
 
-    function updateTokenURI(uint256 tokenId, string memory _tokenURI)
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    function safeMint(
+        address to,
+        string memory uri
+    ) 
         public
-        whenNotPaused 
+        whenNotPaused
+        onlyOwner
     {
-        require(hasRole(CAMPAIGN, _msgSender()) || hasRole(ADMIN, _msgSender()), "Must be HuntCrowdfunding contract or admin!");
-        _setTokenURI(tokenId, _tokenURI);
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
 
     function tokenURI(uint256 tokenId)
@@ -84,67 +70,58 @@ contract DonorRewardsNFT is
         override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
         returns (string memory)
     {
-        require(_exists(tokenId), "Token does not exist!");
         return _tokenURIs[tokenId];
     }
 
-    function getNumVoters() public view returns (uint256) {
-        return _numVoters;
-    }
+    function getVoters() public view returns (uint256) {
+        return voters;
+    } 
 
-    function getPastNumVoters(uint256 fromBlock) public view returns (uint256) {
-        return _pastNumVoters[fromBlock];
-    }
+    function getPastVoters(uint256 blockNumber) public view returns (uint256) {
+        return votersCheckpoints.getAtBlock(blockNumber);
+    } 
 
-    function pause() public whenNotPaused {
-        _checkRole(ADMIN);
-        _pause();
-    }
+    // The following functions are overrides required by Solidity.
 
-    function unpause() public whenPaused {
-        _checkRole(ADMIN);
-        _unpause();
-    }
-
-    function _getVotingUnits(address account) internal view override returns (uint256) {
-        if (balanceOf(account) > 0) {
-            return 1;
-        } else {
-            return 0;
-        }
+    function _setTokenURI(uint256 tokenId, string memory uri) internal override {
+        _tokenURIs[tokenId] = uri;
     }
 
     function _beforeTokenTransfer(
-        address from,
-        address to,
+        address from, 
+        address to, 
         uint256 tokenId
-    ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) whenNotPaused {
-        _updateNumVoters(from, to);
+    )
+        internal
+        whenNotPaused
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+    {
         super._beforeTokenTransfer(from, to, tokenId);
     }
-    
+
 
     function _afterTokenTransfer(
         address from,
         address to,
-        uint256 amount
-    ) internal override(ERC721Upgradeable, ERC721VotesUpgradeable) whenNotPaused {
-        _pastNumVoters[block.number] = _numVoters;
-        _updateNumVoters(from, to);
-        super._afterTokenTransfer(from, to, amount);
+        uint256 tokenId
+    ) 
+        internal
+        whenNotPaused
+        override(ERC721Upgradeable, ERC721VotesUpgradeable) 
+    {
+        _updateVoters(from, to);
+        super._afterTokenTransfer(from, to, tokenId);
     }
 
-    function _updateNumVoters(address from, address to) internal {
+    function _updateVoters(address from, address to) internal {
         if ((balanceOf(from) - 1) == 0) {
-            _numVoters -= 1;
-        } else if (balanceOf(to) == 0) {
-            _numVoters += 1;
+            votersCheckpoints.push(_subtraction, voters);
+            voters -= 1;
         }
-    }
-
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal override {
-        require(_exists(tokenId), "Token does not exist!");
-        _tokenURIs[tokenId] = _tokenURI;
+        if (balanceOf(to) == 0) {
+            votersCheckpoints.push(_addition, voters);
+            voters += 1;
+        }
     }
 
     function _burn(uint256 tokenId)
@@ -153,14 +130,33 @@ contract DonorRewardsNFT is
     {
         super._burn(tokenId);
     }
+
+    function _addition(
+        uint256 a,
+        uint256 b
+    )
+        private
+        pure
+        returns (uint256)
+    {
+        return a + b;
+    }
+
+    function _subtraction(
+        uint256 a,
+        uint256 b
+    )
+        private
+        pure
+        returns (uint256)
+    {
+        return a - b;
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(
-            ERC721Upgradeable, 
-            ERC721EnumerableUpgradeable, 
-            AccessControlUpgradeable
-        )
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

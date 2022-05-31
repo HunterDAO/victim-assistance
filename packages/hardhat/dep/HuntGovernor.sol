@@ -78,7 +78,8 @@ contract HunterGovernor is Initializable, GovernorUpgradeable, GovernorSettingsU
         hunt = _hunt;
         // hcRegistry = new HCRegistry();
         huntTreasury = _huntTreasury;
-        huntCrowdfundingFactory = new HuntCrowdfundingFactory(
+        huntCrowdfundingFactory = new HuntCrowdfundingFactory();
+        huntCrowdfundingFactory.__HuntCrowdfundingFactory_init(
             _roleAdmin,
             address(this),
             _huntTreasury

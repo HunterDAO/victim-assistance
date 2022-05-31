@@ -14,15 +14,33 @@ abstract contract HuntGovernorVotes is GovernorVotesUpgradeable {
     HuntToken private hunt;
     DonorRewardsNFT private donorRewards;
 
-    function __HuntGovernorVotes_init(uint256 _nHuntTokens, HuntToken _hunt, DonorRewardsNFT _donorRewards) internal onlyInitializing {
-        hunt = HuntToken(_hunt);
-        donorRewards = DonorRewardsNFT(_donorRewards);
+    function __HuntGovernorVotes_init(
+        uint256 _nHuntTokens,
+        HuntToken _hunt,
+        DonorRewardsNFT _donorRewards
+    )
+        internal
+        onlyInitializing
+    {
         __GovernorVotes_init(_hunt);
-        __HuntGovernorVotes_init_unchained(_nHuntTokens);
+        __HuntGovernorVotes_init_unchained(
+            _nHuntTokens,
+            _hunt,
+            _donorRewards
+        );
     }
 
-    function __HuntGovernorVotes_init_unchained(uint256 _nHuntTokens) internal onlyInitializing {
+    function __HuntGovernorVotes_init_unchained(
+        uint256 _nHuntTokens,
+        HuntToken _hunt,
+        DonorRewardsNFT _donorRewards
+    )
+        internal
+        onlyInitializing
+    {
         nHuntTokens = _nHuntTokens;
+        hunt = _hunt;
+        donorRewards = _donorRewards;
     }
     
     constructor() {}
@@ -30,13 +48,40 @@ abstract contract HuntGovernorVotes is GovernorVotesUpgradeable {
     /**
      * Read the voting weight from the token's built in snapshot mechanism (see {Governor-_getVotes}).
      */
-    function _getVotes(
-        address account,
-        uint256 blockNumber,
-        bytes memory /*params*/
-    ) internal view virtual override returns (uint256) {
-        return getVotes(account, blockNumber); 
-    }
+    // function _getVotes(
+    //     address account,
+    //     uint256 blockNumber,
+    //     bytes memory /*params*/
+    // ) internal view virtual override returns (uint256) {
+    //     // return getVotes(account, blockNumber);
+    //     return _getVotingUnits(account);
+    // }
+
+    // function _getPastVotes(
+    //     address account,
+    //     uint256 blockNumber
+    // )
+    //     public
+    //     view
+    //     returns (uint256)
+    // {
+    //     return hunt.getPastVotes(
+    //         account,
+    //         blockNumber
+    //     );
+    // }
+
+    /**
+     * Read the voting weight from the token's built in snapshot mechanism (see {Governor-_getVotes}).
+     */
+    // function _getPastVotes(
+    //     address account,
+    //     uint256 blockNumber,
+    //     bytes memory /*params*/
+    // ) internal view virtual override returns (uint256) {
+    //     // return getVotes(account, blockNumber);
+    //     return _getVotingUnits(account);
+    // }
 
      /**
      * @param account - Address of account to check. 

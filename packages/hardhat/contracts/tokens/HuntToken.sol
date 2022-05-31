@@ -1,101 +1,141 @@
-// SPDX-License-Identifier: Apache
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CheckpointsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetFixedSupplyUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/draft-ERC20PermitUpgradeable.sol";
 
-//IERC20MetadataUpgradeable
-contract HuntToken is ERC20PresetFixedSupplyUpgradeable, ERC20VotesUpgradeable {
+/// @custom:security-contact admin@hunterdao.io
+contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, ERC20PermitUpgradeable, ERC20VotesUpgradeable {
 
-    uint256 private _numVoters = 0;
-    mapping(uint256 => uint256) private _pastNumVoters;
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(
-        string memory _name, 
-        string memory _symbol,
-        uint256 _initialSupply,
-        address _owner
-    ) initializer {
-        initialize(
-            _name,
-            _symbol,
-            _initialSupply,
-            _owner
-        );
+    using CheckpointsUpgradeable for CheckpointsUpgradeable.History;
+
+    uint256 public voters = 0;
+    CheckpointsUpgradeable.History internal votersCheckpoints;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() initializer public {
+        __ERC20_init("HuntToken", "HUNT");
+        __ERC20Burnable_init();
+        __Pausable_init();
+        __AccessControl_init();
+        __ERC20Permit_init("HuntToken");
         __ERC20Votes_init();
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
     }
 
-    function getNumVoters() public view returns (uint256) {
-        return _numVoters;
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
     }
 
-    function getPastNumVoters(uint256 fromBlock) public view returns (uint256) {
-        return _pastNumVoters[fromBlock];
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
-    function _mint(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        super._mint(account, amount);
+    function mint(
+        address to,
+        uint256 amount
+    ) 
+        public
+        whenNotPaused
+        onlyRole(MINTER_ROLE)
+    {
+        _mint(to, amount);
     }
 
-    function _burn(address account, uint256 amount) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        if (balanceOf(account) - amount == 0) {
-            _numVoters -= 1;
-        }
+    function getVoters() public view returns (uint256) {
+        return voters;
+    } 
+
+    function getPastVoters(uint256 blockNumber) public view returns (uint256) {
+        return votersCheckpoints.getAtBlock(blockNumber);
+    } 
+
+    function _mint(
+        address to,
+        uint256 amount
+    )
+        internal
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
+        super._mint(to, amount);
+    }
+
+    function _burn(
+        address account,
+        uint256 amount
+    )
+        internal
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._burn(account, amount);
     }
 
-    /**
-     * @dev Move voting power when tokens are transferred.
-     * @dev Update numVoters as appropriate.
-     *
-     * Emits a {DelegateVotesChanged} event.
-     */
+    function _beforeTokenTransfer(
+        address from, 
+        address to, 
+        uint256 amount
+    )
+        internal
+        whenNotPaused
+        override
+    {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
     function _afterTokenTransfer(
         address from,
         address to,
         uint256 amount
-    ) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
-        _pastNumVoters[block.number] = _numVoters;
-
-        if ((balanceOf(from) - amount) == 0) {
-            _numVoters -= 1;
-        } else if (balanceOf(to) == 0) {
-            _numVoters += 1;
-        }
-
+    ) 
+        internal
+        whenNotPaused
+        override(ERC20Upgradeable, ERC20VotesUpgradeable) 
+    {
+        _updateVoters(from, to);
         super._afterTokenTransfer(from, to, amount);
     }
 
-    // /**
-    //  * @dev Override sets .
-    //  *
-    //  * Emits events {DelegateChanged} and {DelegateVotesChanged}.
-    //  */
-    // function _delegate(address delegator, address delegatee) internal override {
-    //     address currentDelegate = delegates(delegator);
-    //     _delegates[delegator] = delegatee;
+    function _updateVoters(
+        address from,
+        address to
+    ) internal {
+        if ((balanceOf(from) - 1) == 0) {
+            votersCheckpoints.push(_subtraction, voters);
+            voters -= 1;
+        }
+        if (balanceOf(to) == 0) {
+            votersCheckpoints.push(_addition, voters);
+            voters += 1;
+        }
+    }
 
-    //     emit DelegateChanged(delegator, currentDelegate, delegatee);
+    function _addition(
+        uint256 a,
+        uint256 b
+    ) private pure returns (uint256) {
+        return a + b;
+    }
 
-    //     _moveVotingPower(currentDelegate, delegatee, 1);
-    // }
-
-    // function _writeCheckpoint(
-    //     Checkpoint[] storage ckpts
-    //     // function(uint256, uint256) view returns (uint256) op,
-    //     // uint256 delta
-    // ) private override returns (uint256 oldWeight, uint256 newWeight) {
-    //     uint256 pos = ckpts.length;
-    //     oldWeight = pos == 0 ? 0 : ckpts[pos - 1].votes;
-    //     newWeight = 1;
-    //     // op(oldWeight, delta);
-
-    //     if (pos > 0 && ckpts[pos - 1].fromBlock == block.number) {
-    //         ckpts[pos - 1].votes = SafeCastUpgradeable.toUint224(newWeight);
-    //     } else {
-    //         ckpts.push(Checkpoint({fromBlock: SafeCastUpgradeable.toUint32(block.number), votes: SafeCastUpgradeable.toUint224(newWeight)}));
-    //     }
-    // }
-
+    function _subtraction(
+        uint256 a,
+        uint256 b
+    ) private pure returns (uint256) {
+        return a - b;
+    }
 }

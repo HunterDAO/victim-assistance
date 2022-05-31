@@ -1,7 +1,7 @@
 pragma solidity ^0.8.4;
 // SPDX-License-dIdentifier: MIT
 
-import "./VictimAssistanceVault.sol";
+import "./InvestigationsVault.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -40,7 +40,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
 
     CountersUpgradeable.Counter public numDonors;
     
-    VictimAssistanceVault victimAssistanceVault;
+    InvestigationsVault investigationsVault;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -73,7 +73,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
-        victimAssistanceVault = new VictimAssistanceVault(_beneficiary, _daoTreasury);
+        investigationsVault = new InvestigationsVault(_beneficiary, _daoTreasury);
     }
 
     constructor() {}
@@ -87,7 +87,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
     }
 
     function getVaultAddress() external view returns (address) {
-        return address(victimAssistanceVault);
+        return address(investigationsVault);
     }
 
     function getNumberOfDonors() public view returns (uint256) {
@@ -135,7 +135,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         totalCollected += sendValue;
         donorContribution[_msgSender()] += sendValue;
 
-        payable(victimAssistanceVault).transfer(sendValue);
+        payable(investigationsVault).transfer(sendValue);
         
         numDonors.increment();
 
@@ -152,14 +152,14 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
             campaignStatus = CampaignStatus.Successful;
             emit CampaignSucceeded(totalCollected);
 
-            // victimAssistanceVault.unlockFunds();
+            // investigationsVault.unlockFunds();
 
             _pause();
         } else {
             campaignStatus = CampaignStatus.Failed;
             emit CampaignFailed(totalCollected);
 
-            // victimAssistanceVault.escapeFunds();
+            // investigationsVault.escapeFunds();
 
             _pause();
         }

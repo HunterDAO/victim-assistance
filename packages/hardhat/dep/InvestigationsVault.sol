@@ -51,18 +51,18 @@ contract InvestigationsVault is IHuntVault, AccessControlEnumerable, PausableFin
         _unpause();
     }
 
-    function retireVault() external whenActiveAndNotPaused {
+    function retireVault() external whenActiveAndUnpaused {
         _finalize();
     }
 
-    function withdraw() external whenActiveAndNotPaused override {
+    function withdraw() external whenActiveAndUnpaused override {
         _checkRole(BENEFICIARY);
         address beneficiary = getRoleMember(BENEFICIARY, 0);
         emit Withdrawn(_msgSender(), address(this).balance);
         Address.sendValue(payable(beneficiary), address(this).balance);
     }
 
-    function withdrawTokens(address token) external whenActiveAndNotPaused override {
+    function withdrawTokens(address token) external whenActiveAndUnpaused override {
         _checkRole(BENEFICIARY);
         address beneficiary = getRoleMember(BENEFICIARY, 0);
         uint256 balance = IERC20(token).balanceOf(address(this));
@@ -78,7 +78,7 @@ contract InvestigationsVault is IHuntVault, AccessControlEnumerable, PausableFin
         return getRoleMemberCount(BENEFICIARY);
     }
 
-    function addBeneficiary(address newBeneficiary) external whenActiveAndNotPaused override {
+    function addBeneficiary(address newBeneficiary) external whenActiveAndUnpaused override {
         require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (newBeneficiary == address(0)) {
             revert NoAddressZero();
@@ -86,7 +86,7 @@ contract InvestigationsVault is IHuntVault, AccessControlEnumerable, PausableFin
         grantRole(BENEFICIARY, newBeneficiary);
     }
 
-    function removeBeneficiary(address oldBeneficiary) external whenActiveAndNotPaused override {
+    function removeBeneficiary(address oldBeneficiary) external whenActiveAndUnpaused override {
         require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (oldBeneficiary == address(0)) {
             revert NoAddressZero();
@@ -94,7 +94,7 @@ contract InvestigationsVault is IHuntVault, AccessControlEnumerable, PausableFin
         revokeRole(BENEFICIARY, oldBeneficiary);
     }
 
-    function replaceBeneficiary(address newBeneficiary, address oldBeneficiary) external whenActiveAndNotPaused override {
+    function replaceBeneficiary(address newBeneficiary, address oldBeneficiary) external whenActiveAndUnpaused override {
         require(hasRole(BENEFICIARY, _msgSender()) || hasRole(DEFAULT, _msgSender()), "Must be beneficiary or admin!");
         if (oldBeneficiary == address(0) || newBeneficiary == address(0)) {
             revert NoAddressZero();

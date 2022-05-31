@@ -19,14 +19,17 @@ describe("HuntCrowdfunding contract", function () {
     let donor3: SignerWithAddress;
     let addrs: SignerWithAddress[];
 
+    const maxFunding = ethers.utils.parseEther("2");
+
     before(async function () {
         [owner, daoTreasury, beneficiary, donor1, donor2, donor3, ...addrs] = await ethers.getSigners();
 
         Crowdfunding = await ethers.getContractFactory("HuntCrowdfunding");
         Vault = await ethers.getContractFactory("InvestigationsVault");
 
-        crowdfunding = await Crowdfunding.deploy(
-            ethers.utils.parseEther("2"), 
+        crowdfunding = await Crowdfunding.deploy();
+        crowdfunding.initialize(
+            maxFunding, 
             beneficiary.address,
             daoTreasury.address
         );

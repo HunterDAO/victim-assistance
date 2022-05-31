@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache
+// SPDX-License-Identifier: Apache
 pragma solidity ^0.8.4;
 
 import "../tokens/HuntToken.sol";
@@ -14,57 +15,25 @@ abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
 
     event QuorumDenominatorUpdated(uint256 oldQuorumDenominator, uint256 newQuorumDenominator);
 
-    function __HuntGovernorQuorum_init(
-        uint256 _numerator,
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
-    )
-        internal
-        onlyInitializing
-    {
-        __HuntGovernorQuorum_init_unchained(
-            _hunt,
-            _donorRewards
-        );
+    function __HuntGovernorQuorum_init(uint256 _numerator, uint256 _denominator, HuntToken _hunt) internal onlyInitializing {
+        hunt = _hunt;
+        _quorumDenominator = _denominator;
         __GovernorVotesQuorumFraction_init(_numerator);
     }
-
-    function __HuntGovernorQuorum_init_unchained(
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
-    ) 
-        internal
-        onlyInitializing
-    {
-        _quorumDenominator = quorumDenominator();
-        hunt = _hunt;
-        donorRewards = _donorRewards;
-    }
-
     constructor() {}
 
     /**
      * @dev Returns the quorum denominator. Defaults to 100, but may be overridden.
      */
-    function quorumDenominator() public view override returns (uint256) {
-        return hunt.getVoters() + donorRewards.getVoters();
+    function quorumDenominator() public view virtual override returns (uint256) {
+        return hunt.getNumVoters() + donorRewards.getNumVoters();
     }
 
     /**
-     * @dev TODO: Audit
      * @dev Returns the quorum for a block number, in terms of number of votes: `supply * numerator / denominator`.
      */
-    function quorum(
-        uint256 blockNumber
-    )
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        // return ((hunt.getPastVoters(blockNumber) + donorRewards.getPastVoters(blockNumber)) * quorumNumerator()) / quorumDenominator();
-        return quorumNumerator() / quorumDenominator();
+    function quorum(uint256 blockNumber) public view virtual override returns (uint256) {
+        return ((hunt.getPastNumVoters(blockNumber) + donorRewards.getPastNumVoters(blockNumber)) * quorumNumerator()) / quorumDenominator();
     }
 
     /**
@@ -77,13 +46,7 @@ abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
      * - Must be called through a governance proposal.
      * - New numerator must be smaller or equal to the denominator.
      */
-    function updateQuorumDenominator(
-        uint256 newQuorumDenominator
-    )
-        external
-        virtual
-        onlyGovernance
-    {
+    function updateQuorumDenominator(uint256 newQuorumDenominator) external virtual onlyGovernance {
         _updateQuorumDenominator(newQuorumDenominator);
     }
 
@@ -96,12 +59,7 @@ abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
      *
      * - New numerator must be smaller or equal to the denominator.
      */
-    function _updateQuorumDenominator(
-        uint256 newQuorumDenominator
-    )
-        internal
-        virtual
-    {
+    function _updateQuorumDenominator(uint256 newQuorumDenominator) internal virtual {
         require(
             quorumNumerator() <= newQuorumDenominator,
             "HuntGovernorQuorum: quorumNumerator over quorumDenominator"

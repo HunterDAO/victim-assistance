@@ -5,6 +5,11 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-solhint";
+import "@nomiclabs/hardhat-web3";
+// import "@openzeppelin/contracts";
+// import "@openzeppelin/contracts-upgradeable";
+// import "@openzeppelin/hardhat-upgrades";
+// import "@openzeppelin/hardhat-defender";
 import "@typechain/hardhat";
 import "dotenv/config";
 // import "hardhat-deploy";
