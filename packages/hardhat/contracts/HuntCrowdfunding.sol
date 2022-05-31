@@ -59,10 +59,10 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         address payable _beneficiary,
         address payable _daoTreasury
     ) external initializer {
-        __HuntCrowdfunding_init_unchained(_maximumFunding, _beneficiary, _daoTreasury);
+        __HuntCrowdfunding_init(_maximumFunding, _beneficiary, _daoTreasury);
     }
 
-    function __HuntCrowdfunding_init_unchained(
+    function __HuntCrowdfunding_init(
         uint256 _maximumFunding,
         address payable _beneficiary,
         address payable _daoTreasury

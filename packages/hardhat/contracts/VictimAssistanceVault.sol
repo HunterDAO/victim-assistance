@@ -23,43 +23,43 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     bytes32 private constant BENEFICIARY_ROLE = keccak256("BENEFICIARY_ROLE_ROLE");
 
     uint256 private constant crowdfundFee = 60;
+
     HuntRegistry private registry;
 
-    error NoAddressZero();
+    address payable beneficiary;
 
-    event Contribution(address donor, uint256 amount);
-    event Withdrawl(address beneficiary, uint256 amount);
-    event WithdrawlTokens(SafeERC20 token, address beneficiary, uint256 amount);
+    error NoAddressZero();
 
     function initialize(
         address payable _beneficiary,
         address payable _campaign,
-        address payable _registry
-    ) public initializer  {
-        __VictimAssistanceVault_init_unchained(
+        HuntRegistry _registry
+    ) external initializer  {
+        __VictimAssistanceVault_init(
             _beneficiary,
             _campaign,
             _registry
         );
     }
 
-    function __VictimAssistanceVault_init_unchained(
+    function __VictimAssistanceVault_init(
         address payable _beneficiary,
         address payable _campaign,
-        address payable _registry
+        HuntRegistry _registry
     ) internal onlyInitializing {
-        registry.treasury() = _registry.treasury();
+        registry = _registry;
         _grantRole(CAMPAIGN_ROLE, _msgSender());
         _grantRole(BENEFICIARY_ROLE, _beneficiary);
+        _grantRole(DEFAULT_ADMIN_ROLE, _registry.secOps());
         _pause();
     }
 
     constructor() {
-        disableInitializers();
+        _disableInitializers();
     }
     
     receive() external payable {
-        emit Contribution(_msgSender(), msg.value);
+        emit Deposit(_msgSender(), msg.value);
     }
 
     function unlockFunds() external whenPaused onlyRole(CAMPAIGN_ROLE) {
@@ -77,64 +77,50 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     }
 
     function withdrawTokens(
-        SafeERC20 token
+        IERC20 token
     ) 
         external
         whenNotPaused
-        override
         onlyRole(BENEFICIARY_ROLE)
     {
         uint256 balance = token.balanceOf(address(this));
-        emit WithdrawlTokens(token, _msgSender(), balance);
+        emit WithdrawlTokens(address(token), _msgSender(), balance);
         SafeERC20.safeTransfer(IERC20(token), beneficiary, balance);
     }
 
-    function beneficiaryAdmin() external view override returns (address) {
-        return getRoleMember(BENEFICIARY_ROLE, 0);
-    }
+    // function numSpenders() external view returns (uint256) {
+        // return registry.numSpenders(address(this));
+    // }
 
-    function numBeneficiaries() external view override returns (uint256) {
-        return getRoleMemberCount(BENEFICIARY_ROLE);
-    }
-
-    function addBeneficiary(
-        address newBeneficiary
+    function addSpender(
+        address newSpender
     ) 
         public
         whenNotPaused
-        override
     {
-        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "Must be beneficiary or admin!");
-        if (newBeneficiary == address(0)) {
-            revert NoAddressZero();
-        }
-        grantRole(BENEFICIARY_ROLE, newBeneficiary);
+        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be approved spender or admin!");
+        grantRole(BENEFICIARY_ROLE, newSpender);
     }
 
-    function removeBeneficiary(
-        address oldBeneficiary
+    function removeSpender(
+        address oldSpender
     ) 
         public
         whenNotPaused
-        override
     {
-        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "Must be beneficiary or admin!");
-        if (oldBeneficiary == address(0)) {
-            revert NoAddressZero();
-        }
-        revokeRole(BENEFICIARY_ROLE, oldBeneficiary);
+        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be beneficiary or admin!");
+        revokeRole(BENEFICIARY_ROLE, oldSpender);
     }
 
-    function replaceBeneficiary(
-        address newBeneficiary,
-        address oldBeneficiary
+    function replaceSpender(
+        address newSpender,
+        address oldSpender
     ) 
         public
         whenNotPaused
-        override
     {
-        addBeneficiary(newBeneficiary);
-        removeBeneficiary(oldBeneficiary);
+        addSpender(newSpender);
+        removeSpender(oldSpender);
     }
 
     function getBalance() external view returns (uint256) {

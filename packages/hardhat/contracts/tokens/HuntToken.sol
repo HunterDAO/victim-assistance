@@ -21,12 +21,7 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
     uint256 public voters = 0;
     CheckpointsUpgradeable.History internal votersCheckpoints;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize() initializer public {
+    function initialize() external initializer {
         __ERC20_init("HuntToken", "HUNT");
         __ERC20Burnable_init();
         __Pausable_init();
@@ -34,9 +29,14 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
         __ERC20Permit_init("HuntToken");
         __ERC20Votes_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(PAUSER_ROLE, _msgSender());
+        _grantRole(MINTER_ROLE, _msgSender());
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {

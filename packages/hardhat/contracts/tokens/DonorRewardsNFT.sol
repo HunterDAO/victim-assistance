@@ -27,12 +27,7 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
 
     mapping(uint256 => string) private _tokenURIs;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize() initializer public {
+    function initialize() external initializer {
         __ERC721_init("DonorRewardsNFT", "HDDR");
         __ERC721Enumerable_init();
         __ERC721URIStorage_init();
@@ -40,6 +35,11 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
         __Ownable_init();
         __EIP712_init("DonorRewardsNFT", "1");
         __ERC721Votes_init();
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function pause() public onlyOwner {

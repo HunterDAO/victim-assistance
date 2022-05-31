@@ -21,7 +21,7 @@ contract HuntRegistry is AccessControlUpgradeable {
 	address public feeRegistry;
 	address public victimAssistanceFactory;
 
-    VictimAssistance[] victimAssistance;
+    VictimAssistance[] private victimAssistance;
 
 	// address public router;
 	// address public distributor;
@@ -30,8 +30,11 @@ contract HuntRegistry is AccessControlUpgradeable {
 	event SecOpsChanged(address secOps);
 	event TreasuryChanged(address treasury);
 	event FeeRegistryChanged(address feeRegistry);
+
 	event VictimAssistanceFactoryChanged(address victimAssistanceFactory);
-    event VictimAssistanceDeployed(address _campaign, address _vault);
+    event VictimAssistanceDeployed(address campaign, address vault, uint256 victimAssistanceId);
+    event DonorRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
+    event ApprovedSpenderRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
 
     // event RouterChanged(address router);
 	// event DistributorChanged(address distributor);
@@ -41,7 +44,7 @@ contract HuntRegistry is AccessControlUpgradeable {
         address _treasury,
         address _feeRegistry,
 	    address _victimAssistanceFactory
-    ) 
+    )
         internal
         onlyInitializing
     {
@@ -69,7 +72,9 @@ contract HuntRegistry is AccessControlUpgradeable {
 	    victimAssistanceFactory = _victimAssistanceFactory;
     }
 
-	constructor() { }
+	constructor() {
+        _disableInitializers();    
+    }
     
     // onlyGovernor
 	function setSecOps(address _secOps) external {
@@ -109,7 +114,7 @@ contract HuntRegistry is AccessControlUpgradeable {
         victimAssistance.push(
             VictimAssistance(_campaign, _vault)
         );
-		emit VictimAssistanceDeployed(victimAssitance.length - 1, _campaign, _vault);
+		emit VictimAssistanceDeployed(_campaign, _vault, victimAssistance.length - 1);
 	}
 
     // onlyGovernor
