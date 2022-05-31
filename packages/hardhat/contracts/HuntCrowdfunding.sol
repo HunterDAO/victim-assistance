@@ -1,7 +1,7 @@
 pragma solidity ^0.8.4;
 // SPDX-License-dIdentifier: MIT
 
-import "./VictimAssistanceVault.sol";
+import "./governance/HuntRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -40,7 +40,10 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
 
     CountersUpgradeable.Counter public numDonors;
     
-    VictimAssistanceVault private victimAssistanceVault;
+    address payable  benificiary;
+    address private vault;
+
+    HuntRegistry private registry;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -57,15 +60,15 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
     function initialize(
         uint256 _maximumFunding,
         address payable _beneficiary,
-        address payable _daoTreasury
+        HuntRegistry _registry
     ) external initializer {
-        __HuntCrowdfunding_init(_maximumFunding, _beneficiary, _daoTreasury);
+        __HuntCrowdfunding_init(_maximumFunding, _beneficiary, _registry);
     }
 
     function __HuntCrowdfunding_init(
         uint256 _maximumFunding,
         address payable _beneficiary,
-        address payable _daoTreasury
+        HuntRegistry _registry
     ) internal onlyInitializing {
         campaignStatus = CampaignStatus.Active;
         __Ownable_init();
@@ -73,11 +76,12 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
-        victimAssistanceVault = new VictimAssistanceVault(_beneficiary, _daoTreasury);
+        benificiary = _beneficiary;
+        registry = _registry;
     }
 
     constructor() {
-        disableInitializers();
+        _disableInitializers();
     }
 
     receive () external whenActive payable {
@@ -89,7 +93,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
     }
 
     function getVaultAddress() external view returns (address) {
-        return address(victimAssistanceVault);
+        return address(vault);
     }
 
     function getNumberOfDonors() public view returns (uint256) {
@@ -137,7 +141,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         totalCollected += sendValue;
         donorContribution[_msgSender()] += sendValue;
 
-        payable(victimAssistanceVault).transfer(sendValue);
+        payable(vault).transfer(sendValue);
         
         numDonors.increment();
 
@@ -154,14 +158,14 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
             campaignStatus = CampaignStatus.Successful;
             emit CampaignSucceeded(totalCollected);
 
-            // victimAssistanceVault.unlockFunds();
+            // vault.unlockFunds();
 
             _pause();
         } else {
             campaignStatus = CampaignStatus.Failed;
             emit CampaignFailed(totalCollected);
 
-            // victimAssistanceVault.escapeFunds();
+            // vault.escapeFunds();
 
             _pause();
         }

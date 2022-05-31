@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.4;
 
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 /**
   * @title IDefenseVault
   * @author HunterDAO
@@ -20,7 +22,7 @@ interface IHuntVault {
       * @dev Can only be called by the beneficiary. Token must be a valid ERC20 contract.
       * @param token Token contract address.
       */
-    function withdrawTokens(address token) external;
+    function withdrawTokens(IERC20 token) external;
 
     /**
       * @notice Emitted when a deposit is received

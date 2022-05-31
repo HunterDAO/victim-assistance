@@ -16,7 +16,7 @@ contract HuntRegistry is AccessControlUpgradeable {
     }
 
 	address public governor;
-	address public treasury;
+	address payable public treasury;
 	address public secOps;
 	address public feeRegistry;
 	address public victimAssistanceFactory;
@@ -41,7 +41,7 @@ contract HuntRegistry is AccessControlUpgradeable {
 
     function __HuntRegistry_init(
         address _secOps,
-        address _treasury,
+        address payable _treasury,
         address _feeRegistry,
 	    address _victimAssistanceFactory
     )
@@ -58,7 +58,7 @@ contract HuntRegistry is AccessControlUpgradeable {
 
     function __HuntRegistry_init_unchained(
         address _secOps,
-        address _treasury,
+        address payable _treasury,
         address _feeRegistry,
 	    address _victimAssistanceFactory
     ) 
@@ -89,7 +89,7 @@ contract HuntRegistry is AccessControlUpgradeable {
 	}
 
     // onlyGovernor
-	function setTreasury(address _treasury) external {
+	function setTreasury(address payable _treasury) external {
 		treasury = _treasury;
 		emit TreasuryChanged(_treasury);
 	}

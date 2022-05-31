@@ -17,30 +17,29 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    HuntRegistry registry;
-    address payable treasury;
+    HuntRegistry private registry;
 
     event VictimAssistanceCampaignDeployed(uint256 vcRegistryId, address campaignAddress, address vaultAddress);
 
     function __VictimAssistanceFactory_init(
-        HuntRegistry _huntRegistry
+        HuntRegistry _registry
     )
         internal
         initializer
     {
-        __VictimAssistanceFactory_init_unchained();
+        __VictimAssistanceFactory_init_unchained(_registry);
     }
 
     function __VictimAssistanceFactory_init_unchained(
-        HuntRegistry _huntRegistry
+        HuntRegistry _registry
     ) 
         internal
         onlyInitializing
     {
         grantRole(EXECUTOR_ROLE, _msgSender());
-        grantRole(PAUSER_ROLE, _huntRegistry.secOps());
+        grantRole(PAUSER_ROLE, _registry.secOps());
 
-        registry = _huntRegistry;
+        registry = _registry;
 
         __Pausable_init();
         __AccessControl_init();
@@ -56,29 +55,32 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
         // onlyGovernor
         onlyRole(EXECUTOR_ROLE)
     {
-        HuntCrowdfunding huntCrowdfunding = new HuntCrowdfunding();
+        address payable treasury = registry.treasury();
+        
+        HuntCrowdfunding campaign = new HuntCrowdfunding();
         campaign.initialize(
             _maximumFunding,
             _beneficiary,
-            registry.treasury()
+            registry
         );
 
         VictimAssistanceVault vault = new VictimAssistanceVault();
-        campaign.initialize(
+        vault.initialize(
             _beneficiary,
-            registry.treasury()
+            payable(campaign),
+            registry
         );
 
         registry.registerVC(address(campaign), address(vault));
     }
 
     function pause() public {
-        require(_hasRoleRole(PAUSER_ROLE, _msgSender()) || _hasRoleRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
+        require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
         _pause();
     }
 
     function unpause() public {
-        require(_hasRoleRole(PAUSER_ROLE, _msgSender()) || _hasRoleRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
+        require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
         _unpause();
     }
 }

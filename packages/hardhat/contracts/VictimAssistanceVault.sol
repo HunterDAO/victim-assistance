@@ -20,7 +20,7 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     using AddressUpgradeable for address;
 
     bytes32 private constant CAMPAIGN_ROLE = keccak256("CAMPAIGN_ROLE_ROLE");
-    bytes32 private constant BENEFICIARY_ROLE = keccak256("BENEFICIARY_ROLE_ROLE");
+    bytes32 private constant SPENDER_ROLE = keccak256("SPENDER_ROLE_ROLE");
 
     uint256 private constant crowdfundFee = 60;
 
@@ -49,7 +49,7 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     ) internal onlyInitializing {
         registry = _registry;
         _grantRole(CAMPAIGN_ROLE, _msgSender());
-        _grantRole(BENEFICIARY_ROLE, _beneficiary);
+        _grantRole(SPENDER_ROLE, _beneficiary);
         _grantRole(DEFAULT_ADMIN_ROLE, _registry.secOps());
         _pause();
     }
@@ -71,7 +71,7 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         _pause();
     }
 
-    function withdraw() external whenNotPaused override onlyRole(BENEFICIARY_ROLE) {
+    function withdraw() external whenNotPaused override onlyRole(SPENDER_ROLE) {
         Address.sendValue(payable(beneficiary), address(this).balance);
         emit Withdrawl(_msgSender(), address(this).balance);
     }
@@ -81,16 +81,18 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     ) 
         external
         whenNotPaused
-        onlyRole(BENEFICIARY_ROLE)
+        onlyRole(SPENDER_ROLE)
+        override
     {
         uint256 balance = token.balanceOf(address(this));
         emit WithdrawlTokens(address(token), _msgSender(), balance);
         SafeERC20.safeTransfer(IERC20(token), beneficiary, balance);
     }
 
-    // function numSpenders() external view returns (uint256) {
+    function numSpenders() external view returns (uint256) {
         // return registry.numSpenders(address(this));
-    // }
+        return getRoleMemberCount(SPENDER_ROLE);
+    }
 
     function addSpender(
         address newSpender
@@ -98,8 +100,8 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         public
         whenNotPaused
     {
-        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be approved spender or admin!");
-        grantRole(BENEFICIARY_ROLE, newSpender);
+        require(hasRole(SPENDER_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be approved spender or admin!");
+        grantRole(SPENDER_ROLE, newSpender);
     }
 
     function removeSpender(
@@ -108,8 +110,8 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
         public
         whenNotPaused
     {
-        require(hasRole(BENEFICIARY_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be beneficiary or admin!");
-        revokeRole(BENEFICIARY_ROLE, oldSpender);
+        require(hasRole(SPENDER_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be beneficiary or admin!");
+        revokeRole(SPENDER_ROLE, oldSpender);
     }
 
     function replaceSpender(
@@ -128,8 +130,8 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
     }
 
     function _imposeFee() internal whenNotPaused {
-        address defenseVault = address(this);
-        uint256 feeValue = defenseVault.balance * uint256(crowdfundFee);
-        payable(registry.treasury()).transfer(feeValue);
+        uint256 feeValue = address(this).balance * uint256(crowdfundFee);
+
+        registry.treasury().transfer(feeValue);
     }
 }
