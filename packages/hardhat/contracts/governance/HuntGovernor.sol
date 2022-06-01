@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 
 import "./HuntRegistry.sol";
 import "./HuntGovernorVotes.sol";
-import "./HuntGovernorQuorum.sol";
 import "../tokens/HuntToken.sol";
+import "./HuntGovernorQuorum.sol";
 import "../tokens/DonorRewardsNFT.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
@@ -14,14 +14,16 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelo
 
 /// @custom:security-contact admin@hunterdao.io
 contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, HuntRegistry, GovernorCountingSimpleUpgradeable, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControlUpgradeable {
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards,
+        address _hunt,
+        address _donorRewards,
+        address _registry,
         address payable _treasury,
         address _victimAssistanceFactory,
         TimelockControllerUpgradeable _timelock
@@ -29,13 +31,13 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
         initializer
         public
     {
+        HuntRegistry.initialize(_hunt, _donorRewards, 500, address(this), _treasury, _victimAssistanceFactory);
         __Governor_init("HuntGovernor");
         __GovernorSettings_init(13091 /* 2 days */, 32727 /* 5 days */, 1);
         __GovernorCountingSimple_init();
-        __HuntGovernorVotes_init(500, _hunt, _donorRewards);
-        __HuntGovernorQuorum_init(4, _hunt, _donorRewards);
+        __HuntGovernorVotes_init(_registry);
+        __HuntGovernorQuorum_init(4, _registry);
         __GovernorTimelockControl_init(_timelock);
-        __HuntRegistry_init(address(this), _treasury, _victimAssistanceFactory);
     }
 
     // The following functions are overrides required by Solidity.

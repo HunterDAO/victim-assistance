@@ -1,5 +1,5 @@
-pragma solidity ^0.8.4;
 // SPDX-License-dIdentifier: MIT
+pragma solidity ^0.8.4;
 
 import "./governance/HuntRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";

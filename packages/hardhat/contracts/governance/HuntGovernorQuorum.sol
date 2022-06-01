@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache
 pragma solidity ^0.8.4;
 
+import "./HuntRegistry.sol";
+import "../tokens/HuntToken.sol";
 import "../tokens/HuntToken.sol";
 import "../tokens/DonorRewardsNFT.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
@@ -16,29 +18,25 @@ abstract contract HuntGovernorQuorum is GovernorVotesQuorumFractionUpgradeable {
 
     function __HuntGovernorQuorum_init(
         uint256 _numerator,
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
+        address _registry
     )
         internal
         onlyInitializing
     {
-        __HuntGovernorQuorum_init_unchained(
-            _hunt,
-            _donorRewards
-        );
+        __HuntGovernorQuorum_init_unchained(_registry);
         __GovernorVotesQuorumFraction_init(_numerator);
     }
 
     function __HuntGovernorQuorum_init_unchained(
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
+        address _registry
     ) 
         internal
         onlyInitializing
     {
+        HuntRegistry registry = HuntRegistry(_registry);
+        hunt = HuntToken(registry.hunt());
+        donorRewards = DonorRewardsNFT(registry.donorRewards());
         _quorumDenominator = quorumDenominator();
-        hunt = _hunt;
-        donorRewards = _donorRewards;
     }
 
     constructor() {}

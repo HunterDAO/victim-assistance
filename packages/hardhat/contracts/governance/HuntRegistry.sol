@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 // import "./TimeLock.sol";
 
@@ -10,10 +10,18 @@ contract HuntRegistry is AccessControlUpgradeable {
 
     using AddressUpgradeable for address;
 
+    bytes32 private VICTIM_ASSISTANCE_ROLE = keccak256("VICTIM_ASSISTANCE_ROLE");
+
     struct VictimAssistance {
         address campaign;
         address vault;
+        address payable _paymentSplitter;
     }
+
+    address public hunt;
+    uint256 public tokensToVote;
+
+    address public donorRewards;
 
 	address public governor;
 	address payable public treasury;
@@ -22,64 +30,81 @@ contract HuntRegistry is AccessControlUpgradeable {
 
     VictimAssistance[] private victimAssistance;
 
-	// address public feeRegistry;
 	// address public router;
 	// address public distributor;
+
+	event HuntToken(address huntToken);
+    event TokensToVoteChanged(uint256 tokens);
+
+	event DonorRewardsNFTChanged(address donorRewards);
 
 	event GovernorChanged(address governor);
 	event SecOpsChanged(address secOps);
 	event TreasuryChanged(address treasury);
 	event VictimAssistanceFactoryChanged(address victimAssistanceFactory);
 
-    event VictimAssistanceDeployed(address campaign, address vault, uint256 victimAssistanceId);
-    
+    event VictimAssistanceDeployed(address campaign, address vault, address payable paymentSplitter, uint256 victimAssistanceId);
+
     // event DonorRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
 
-	// event FeeRegistryChanged(address feeRegistry);
     // event RouterChanged(address router);
 	// event DistributorChanged(address distributor);
 
-    function __HuntRegistry_init(
+    function initialize(
+        address _hunt,
+        address _donorRewards,
+        uint256 _tokensToVote,
         address _secOps,
         address payable _treasury,
-        // address _feeRegistry,
 	    address _victimAssistanceFactory
     )
-        internal
-        onlyInitializing
+        public
+        initializer
     {
         __HuntRegistry_init_unchained(
+            _hunt,
+            _donorRewards,
+            _tokensToVote,
             _secOps,
             _treasury,
-            // _feeRegistry,
             _victimAssistanceFactory
         );
     }
 
     function __HuntRegistry_init_unchained(
+        address _hunt,
+        address _donorRewards,
+        uint256 _tokensToVote,
         address _secOps,
         address payable _treasury,
-        // address _feeRegistry,
 	    address _victimAssistanceFactory
     ) 
         internal
         onlyInitializing
     {
+        hunt = _hunt;
+        donorRewards = _donorRewards;
+        tokensToVote = _tokensToVote;
         secOps = _secOps;
         governor = _msgSender();
         treasury = _treasury;
-        // feeRegistry = _feeRegistry;
 	    victimAssistanceFactory = _victimAssistanceFactory;
     }
 
 	constructor() {
         _disableInitializers();    
     }
-    
+
     // onlyGovernor
-	function setSecOps(address _secOps) external {
-		secOps = _secOps;
-		emit GovernorChanged(_secOps);
+	function setTokensToVote(uint256 _tokensToVote) external {
+		tokensToVote = _tokensToVote;
+		emit TokensToVoteChanged(_tokensToVote);
+	}
+
+    // onlyGovernor
+	function setDonorRewards(address _donorRewards) external {
+		donorRewards = _donorRewards;
+		emit DonorRewardsNFTChanged(_donorRewards);
 	}
 
     // onlyGovernor
@@ -93,6 +118,12 @@ contract HuntRegistry is AccessControlUpgradeable {
 		treasury = _treasury;
 		emit TreasuryChanged(_treasury);
 	}
+    
+    // onlyGovernor
+	function setSecOps(address _secOps) external {
+		secOps = _secOps;
+		emit SecOpsChanged(_secOps);
+	}
 
     // onlyGovernor
 	function setVictimAssistanceFactory(address _victimAssistanceFactory) external {
@@ -100,15 +131,23 @@ contract HuntRegistry is AccessControlUpgradeable {
 		emit VictimAssistanceFactoryChanged(_victimAssistanceFactory);
 	}
 
-    // onlyGovernor
-	function registerVC(
+	function registerVAC(
         address _campaign,
-        address _vault
-    ) external {
+        address _vault,
+        address payable _paymentSplitter
+    ) 
+        external
+        onlyRole(VICTIM_ASSISTANCE_ROLE)
+        returns (uint256)
+    {
         victimAssistance.push(
-            VictimAssistance(_campaign, _vault)
+            VictimAssistance(_campaign, _vault, _paymentSplitter)
         );
-		emit VictimAssistanceDeployed(_campaign, _vault, victimAssistance.length - 1);
+        uint256 victimAssistanceId = victimAssistance.length - 1;
+
+		emit VictimAssistanceDeployed(_campaign, _vault, _paymentSplitter, victimAssistanceId);
+
+        return victimAssistanceId;
 	}
 
     // onlyGovernor

@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "./HuntCrowdfunding.sol";
 import "./VictimAssistanceVault.sol";
 import "./governance/HuntRegistry.sol";
+import "./governance/HuntPaymentSplitter.sol";
 import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -19,12 +20,10 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
 
     HuntRegistry private registry;
 
-    event VictimAssistanceCampaignDeployed(uint256 vcRegistryId, address campaignAddress, address vaultAddress);
-
-    function __VictimAssistanceFactory_init(
+    function initialize(
         HuntRegistry _registry
     )
-        internal
+        external
         initializer
     {
         __VictimAssistanceFactory_init_unchained(_registry);
@@ -45,7 +44,9 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
         __AccessControl_init();
     }
 
-    constructor() {}
+    constructor() {
+        _disableInitializers();
+    }
 
     function deployNewCampaign(
         uint256 _maximumFunding,
@@ -71,7 +72,9 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
             registry
         );
 
-        registry.registerVC(address(campaign), address(vault));
+        PaymentSplitterUpgradeable paymentSplitter = new HuntPaymentSplitter();
+
+        registry.registerVAC(address(campaign), address(vault), payable(paymentSplitter));
     }
 
     function pause() public {

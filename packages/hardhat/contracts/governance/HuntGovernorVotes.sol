@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache
 pragma solidity ^0.8.4;
 
+import "./HuntRegistry.sol";
 import "../tokens/HuntToken.sol";
 import "../tokens/DonorRewardsNFT.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
@@ -9,38 +10,27 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 
 abstract contract HuntGovernorVotes is GovernorVotesUpgradeable {
 
-    uint256 private nHuntTokens;
-
-    HuntToken private hunt;
-    DonorRewardsNFT private donorRewards;
+    HuntRegistry private registry;
 
     function __HuntGovernorVotes_init(
-        uint256 _nHuntTokens,
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
+        address _registry
     )
         internal
         onlyInitializing
     {
-        __GovernorVotes_init(_hunt);
         __HuntGovernorVotes_init_unchained(
-            _nHuntTokens,
-            _hunt,
-            _donorRewards
+            _registry
         );
     }
 
     function __HuntGovernorVotes_init_unchained(
-        uint256 _nHuntTokens,
-        HuntToken _hunt,
-        DonorRewardsNFT _donorRewards
+        address _registry
     )
         internal
         onlyInitializing
     {
-        nHuntTokens = _nHuntTokens;
-        hunt = _hunt;
-        donorRewards = _donorRewards;
+        registry = HuntRegistry(_registry);
+        __GovernorVotes_init(IVotesUpgradeable(registry.hunt()));
     }
     
     constructor() {}
@@ -88,7 +78,10 @@ abstract contract HuntGovernorVotes is GovernorVotesUpgradeable {
      * @return return the voting units held by an account.
      */
     function _getVotingUnits(address account) internal view returns (uint256) {
-        if ((hunt.balanceOf(account) > nHuntTokens) || (donorRewards.balanceOf(account) > 0)) {
+        HuntToken hunt = HuntToken(registry.hunt());
+        DonorRewardsNFT donorRewards = DonorRewardsNFT(registry.donorRewards());
+
+        if ((hunt.balanceOf(account) > registry.tokensToVote()) || (donorRewards.balanceOf(account) > 0)) {
             return 1;
         } else {
             return 0;
