@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "./HuntRegistry.sol";
 import "./HuntGovernorVotes.sol";
 import "./HuntGovernorQuorum.sol";
 import "../tokens/HuntToken.sol";
@@ -12,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCounti
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockControlUpgradeable.sol";
 
 /// @custom:security-contact admin@hunterdao.io
-contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, GovernorCountingSimpleUpgradeable, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControlUpgradeable {
+contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, HuntRegistry, GovernorCountingSimpleUpgradeable, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControlUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -21,6 +22,8 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function initialize(
         HuntToken _hunt,
         DonorRewardsNFT _donorRewards,
+        address payable _treasury,
+        address _victimAssistanceFactory,
         TimelockControllerUpgradeable _timelock
     )
         initializer
@@ -32,6 +35,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
         __HuntGovernorVotes_init(500, _hunt, _donorRewards);
         __HuntGovernorQuorum_init(4, _hunt, _donorRewards);
         __GovernorTimelockControl_init(_timelock);
+        __HuntRegistry_init(address(this), _treasury, _victimAssistanceFactory);
     }
 
     // The following functions are overrides required by Solidity.
@@ -154,7 +158,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

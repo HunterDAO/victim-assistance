@@ -18,31 +18,31 @@ contract HuntRegistry is AccessControlUpgradeable {
 	address public governor;
 	address payable public treasury;
 	address public secOps;
-	address public feeRegistry;
 	address public victimAssistanceFactory;
 
     VictimAssistance[] private victimAssistance;
 
+	// address public feeRegistry;
 	// address public router;
 	// address public distributor;
 
 	event GovernorChanged(address governor);
 	event SecOpsChanged(address secOps);
 	event TreasuryChanged(address treasury);
-	event FeeRegistryChanged(address feeRegistry);
-
 	event VictimAssistanceFactoryChanged(address victimAssistanceFactory);
-    event VictimAssistanceDeployed(address campaign, address vault, uint256 victimAssistanceId);
-    event DonorRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
-    event ApprovedSpenderRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
 
+    event VictimAssistanceDeployed(address campaign, address vault, uint256 victimAssistanceId);
+    
+    // event DonorRegistered(address donor, uint256 donation, uint256 victimAssistanceId);
+
+	// event FeeRegistryChanged(address feeRegistry);
     // event RouterChanged(address router);
 	// event DistributorChanged(address distributor);
 
     function __HuntRegistry_init(
         address _secOps,
         address payable _treasury,
-        address _feeRegistry,
+        // address _feeRegistry,
 	    address _victimAssistanceFactory
     )
         internal
@@ -51,7 +51,7 @@ contract HuntRegistry is AccessControlUpgradeable {
         __HuntRegistry_init_unchained(
             _secOps,
             _treasury,
-            _feeRegistry,
+            // _feeRegistry,
             _victimAssistanceFactory
         );
     }
@@ -59,7 +59,7 @@ contract HuntRegistry is AccessControlUpgradeable {
     function __HuntRegistry_init_unchained(
         address _secOps,
         address payable _treasury,
-        address _feeRegistry,
+        // address _feeRegistry,
 	    address _victimAssistanceFactory
     ) 
         internal
@@ -68,7 +68,7 @@ contract HuntRegistry is AccessControlUpgradeable {
         secOps = _secOps;
         governor = _msgSender();
         treasury = _treasury;
-        feeRegistry = _feeRegistry;
+        // feeRegistry = _feeRegistry;
 	    victimAssistanceFactory = _victimAssistanceFactory;
     }
 
@@ -95,12 +95,6 @@ contract HuntRegistry is AccessControlUpgradeable {
 	}
 
     // onlyGovernor
-	function setFeeRegistry(address _registry) external {
-		feeRegistry = _registry;
-		emit FeeRegistryChanged(_registry);
-	}
-
-    // onlyGovernor
 	function setVictimAssistanceFactory(address _victimAssistanceFactory) external {
 		victimAssistanceFactory = _victimAssistanceFactory;
 		emit VictimAssistanceFactoryChanged(_victimAssistanceFactory);
@@ -116,6 +110,12 @@ contract HuntRegistry is AccessControlUpgradeable {
         );
 		emit VictimAssistanceDeployed(_campaign, _vault, victimAssistance.length - 1);
 	}
+
+    // onlyGovernor
+	// function setFeeRegistry(address _registry) external {
+	// 	feeRegistry = _registry;
+	// 	emit FeeRegistryChanged(_registry);
+	// }
 
     // onlyGovernor
 	// function setRouter(address _router) external {
