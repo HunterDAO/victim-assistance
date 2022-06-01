@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 
 import "./HuntRegistry.sol";
 import "../tokens/HuntToken.sol";
-import "../tokens/HuntToken.sol";
 import "../tokens/DonorRewardsNFT.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
