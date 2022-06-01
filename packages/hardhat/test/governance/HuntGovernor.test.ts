@@ -274,12 +274,10 @@ describe('Governor', function () {
       proposal.descriptionHash
     ];
 
-    // console.log(txExecuteArgs);
-    
     // const txExecute = await governor.connect(owner).execute( ...txExecuteArgs );
 
     // await expect(txExecute).to.be.emit(governor, 'ProposalExecuted');
-    
+
     await receiver.mockFunction([]);
 
     // expectEvent(
