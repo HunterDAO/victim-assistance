@@ -3,10 +3,9 @@ pragma solidity ^0.8.4;
 
 import './interfaces/IHuntVault.sol';
 import './governance/HuntRegistry.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol';
-import '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol';
+import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /**
   * @title VictimAsssistanceVault
@@ -15,9 +14,7 @@ import '@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
   * @notice A simple conditional escrow contract w/ DeFi yield farming that allows 
   *         the beneficiary to withdraw collected ETH and ERC-20 tokens.
   */
-contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable, PausableUpgradeable {
-
-    using AddressUpgradeable for address;
+contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable {
 
     bytes32 private constant CAMPAIGN_ROLE = keccak256("CAMPAIGN_ROLE_ROLE");
     bytes32 private constant SPENDER_ROLE = keccak256("SPENDER_ROLE_ROLE");
@@ -30,34 +27,18 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerableUpgradeable
 
     error NoAddressZero();
 
-    function initialize(
+    constructor(
         address payable _beneficiary,
         address payable _campaign,
         HuntRegistry _registry
-    ) external initializer  {
-        __VictimAssistanceVault_init(
-            _beneficiary,
-            _campaign,
-            _registry
-        );
-    }
-
-    function __VictimAssistanceVault_init(
-        address payable _beneficiary,
-        address payable _campaign,
-        HuntRegistry _registry
-    ) internal onlyInitializing {
+    )  {
         registry = _registry;
-        _grantRole(CAMPAIGN_ROLE, _msgSender());
+        _grantRole(CAMPAIGN_ROLE, _campaign);
         _grantRole(SPENDER_ROLE, _beneficiary);
-        _grantRole(DEFAULT_ADMIN_ROLE, _registry.secOps());
+        _grantRole(DEFAULT_ADMIN_ROLE, _registry.opSec());
         _pause();
     }
 
-    constructor() {
-        _disableInitializers();
-    }
-    
     receive() external payable {
         emit Deposit(_msgSender(), msg.value);
     }

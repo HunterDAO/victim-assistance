@@ -11,14 +11,15 @@ contract HuntPaymentSplitter is PaymentSplitterUpgradeable, OwnableUpgradeable {
         uint256[] memory _shares
     ) 
         public
+        onlyOwner
         initializer
     {
-        __Ownable_init();
         __PaymentSplitter_init(_payees, _shares);
+        _disableInitializers();
     }
 
     constructor() {
-        _disableInitializers();
+        __Ownable_init();
     }
     
 }

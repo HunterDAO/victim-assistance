@@ -2,12 +2,12 @@
 pragma solidity ^0.8.4;
 
 import "./governance/HuntRegistry.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 /**
  * @title Campaign
@@ -16,11 +16,11 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
  * for financial assistance funding private investigations, or asset recovery
  * services, or cybersecurity provdIded by the HunterDAO or partner DAOs / firms.
  */
-contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
+contract HuntCrowdfunding is Ownable, Pausable {
 
-    using SafeMathUpgradeable for uint256;
-    using AddressUpgradeable for address;
-    using CountersUpgradeable for CountersUpgradeable.Counter;
+    using SafeMath for uint256;
+    using Address for address;
+    using Counters for Counters.Counter;
 
     uint256 public constant campaignDuration = 1814400;
 
@@ -38,7 +38,7 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
     uint256 public maximumFunding;
     uint256 public totalCollected;
 
-    CountersUpgradeable.Counter public numDonors;
+    Counters.Counter public numDonors;
     
     address payable  benificiary;
     address private vault;
@@ -57,31 +57,17 @@ contract HuntCrowdfunding is OwnableUpgradeable, PausableUpgradeable {
         _;
     }
 
-    function initialize(
+    constructor(
         uint256 _maximumFunding,
         address payable _beneficiary,
         HuntRegistry _registry
-    ) external initializer {
-        __HuntCrowdfunding_init(_maximumFunding, _beneficiary, _registry);
-    }
-
-    function __HuntCrowdfunding_init(
-        uint256 _maximumFunding,
-        address payable _beneficiary,
-        HuntRegistry _registry
-    ) internal onlyInitializing {
+    ) {
         campaignStatus = CampaignStatus.Active;
-        __Ownable_init();
-        __Pausable_init();
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
         benificiary = _beneficiary;
         registry = _registry;
-    }
-
-    constructor() {
-        _disableInitializers();
     }
 
     receive () external whenActive payable {

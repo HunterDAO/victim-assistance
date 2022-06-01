@@ -1,24 +1,34 @@
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
+// import { task } from "hardhat/config";
+
+import { HardhatUserConfig } from "hardhat/config";
+
+import "@typechain/hardhat";
 
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-solhint";
+import "@nomiclabs/hardhat-waffle";
+
 import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-truffle5";
+
+import "@nomiclabs/hardhat-solhint";
+import "@nomiclabs/hardhat-etherscan";
+
 // import "@openzeppelin/contracts";
 // import "@openzeppelin/contracts-upgradeable";
-// import "@openzeppelin/hardhat-upgrades";
-// import "@openzeppelin/hardhat-defender";
-import "@typechain/hardhat";
-import "dotenv/config";
+import "@openzeppelin/hardhat-upgrades";
+import "@openzeppelin/hardhat-defender";
+
+import "@atixlabs/hardhat-time-n-mine";
+
 // import "hardhat-deploy";
 // import "solidity-coverage";
 
-// import "./tasks/accounts";
-// import "./tasks/balance";
-// import "./tasks/block-number";
-// import "./tasks/create-collectibles";
+import "dotenv/config";
+
+import "./tasks/accounts";
+import "./tasks/balance";
+import "./tasks/block-number";
+import "./tasks/create-collectibles";
 
 const MAINNET_RPC_URL =
     process.env.MAINNET_RPC_URL ||
@@ -38,7 +48,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY || "your private key";
 const PINATA_API_KEY = process.env.PINATA_API_KEY;
 const PINATA_API_SECRET = process.env.PINATA_API_SECRET;
 
-module.exports = {
+const config: HardhatUserConfig = {
     defaultNetwork: "hardhat",
     networks: {
         hardhat: {
@@ -54,7 +64,7 @@ module.exports = {
             accounts: {
                 mnemonic: MNEMONIC,
             },
-            saveDeployments: true,
+            // saveDeployments: true,
         },
         rinkeby: {
             url: RINKEBY_RPC_URL,
@@ -62,7 +72,7 @@ module.exports = {
             accounts: {
                 mnemonic: MNEMONIC,
             },
-            saveDeployments: true,
+            // saveDeployments: true,
         },
         ganache: {
             url: "http://localhost:8545",
@@ -76,19 +86,25 @@ module.exports = {
         // Obtain one at https://etherscan.io/
         apiKey: ETHERSCAN_API_KEY,
     },
-    namedAccounts: {
-        deployer: {
-            default: 0, // here this will by default take the first account as deployer
-            1: 0, // similarly on mainnet it will take the first account as deployer.
-        },
-        feeCollector: {
-            default: 1,
-        },
-    },
+    // namedAccounts: {
+    //     deployer: {
+    //         default: 0, // here this will by default take the first account as deployer
+    //         1: 0, // similarly on mainnet it will take the first account as deployer.
+    //     },
+    //     feeCollector: {
+    //         default: 1,
+    //     },
+    // },
     solidity: {
         compilers: [
             {
                 version: "0.8.4",
+                settings: {
+                    optimizer: {
+                      enabled: true,
+                      runs: 1000,
+                    },
+                  },
             },
         ],
     },
@@ -100,3 +116,5 @@ module.exports = {
         target: "ethers-v5",
     },
 };
+
+export default config;

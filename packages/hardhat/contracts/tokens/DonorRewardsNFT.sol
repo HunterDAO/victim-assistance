@@ -1,46 +1,46 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/draft-ERC721VotesUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CheckpointsUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Checkpoints.sol";
 
 /// @custom:security-contact admin@hunterdao.io
-contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, EIP712Upgradeable, ERC721VotesUpgradeable {
+contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Ownable, EIP712, ERC721Votes {
 
-    using CountersUpgradeable for CountersUpgradeable.Counter;
-    using CheckpointsUpgradeable for CheckpointsUpgradeable.History;
+    using Counters for Counters.Counter;
+    using Checkpoints for Checkpoints.History;
 
     // uint256 internal nTokens = 1;
 
     uint256 internal voters = 0;
-    CheckpointsUpgradeable.History internal votersCheckpoints;
+    Checkpoints.History internal votersCheckpoints;
 
-    CountersUpgradeable.Counter private _tokenIdCounter;
+    Counters.Counter private _tokenIdCounter;
 
     mapping(uint256 => string) private _tokenURIs;
 
-    function initialize() external initializer {
-        __ERC721_init("DonorRewardsNFT", "HDDR");
-        __ERC721Enumerable_init();
-        __ERC721URIStorage_init();
-        __Pausable_init();
-        __Ownable_init();
-        __EIP712_init("DonorRewardsNFT", "1");
-        __ERC721Votes_init();
+    constructor() ERC721("DonorRewardsNFT", "HDDR") EIP712("DonorRewardsNFT", "1") {
+        // __ERC721_init("DonorRewardsNFT", "HDDR");
+        // __ERC721Enumerable_init();
+        // __ERC721URIStorage_init();
+        // __Pausable_init();
+        // __Ownable_init();
+        // __EIP712_init("DonorRewardsNFT", "1");
+        // __ERC721Votes_init();
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
+    // constructor() {
+        // _disableInitializers();
+    // }
 
     function pause() public onlyOwner {
         _pause();
@@ -67,7 +67,7 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
     function tokenURI(uint256 tokenId)
         public
         view
-        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+        override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
         return _tokenURIs[tokenId];
@@ -94,7 +94,7 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
     )
         internal
         whenNotPaused
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+        override(ERC721, ERC721Enumerable)
     {
         super._beforeTokenTransfer(from, to, tokenId);
     }
@@ -107,26 +107,30 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
     ) 
         internal
         whenNotPaused
-        override(ERC721Upgradeable, ERC721VotesUpgradeable) 
+        override(ERC721, ERC721Votes) 
     {
         _updateVoters(from, to);
         super._afterTokenTransfer(from, to, tokenId);
     }
 
     function _updateVoters(address from, address to) internal {
-        if ((balanceOf(from) - 1) == 0) {
-            votersCheckpoints.push(_subtraction, voters);
-            voters -= 1;
+        if (from != address(0)) {
+            if ((balanceOf(from) - 1) == 0) {
+                votersCheckpoints.push(_subtraction, voters);
+                voters -= 1;
+            }
         }
-        if (balanceOf(to) == 0) {
-            votersCheckpoints.push(_addition, voters);
-            voters += 1;
+        if (to != address(0)) {
+            if (balanceOf(to) == 0) {
+                votersCheckpoints.push(_addition, voters);
+                voters += 1;
+            }
         }
     }
 
     function _burn(uint256 tokenId)
         internal
-        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+        override(ERC721, ERC721URIStorage)
     {
         super._burn(tokenId);
     }
@@ -156,7 +160,7 @@ contract DonorRewardsNFT is Initializable, ERC721Upgradeable, ERC721EnumerableUp
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+        override(ERC721, ERC721Enumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

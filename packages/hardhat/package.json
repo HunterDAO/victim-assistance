@@ -2,6 +2,7 @@
     "name": "contracts",
     "version": "1.0.0",
     "description": "",
+    "private": true,
     "scripts": {
         "compile": "hardhat compile",
         "test": "hardhat test",
@@ -22,9 +23,12 @@
     "author": "@HunterDAO",
     "license": "Apache",
     "devDependencies": {
+        "@atixlabs/hardhat-time-n-mine": "^0.0.5",
         "@nomiclabs/hardhat-ethers": "^2.0.5",
         "@nomiclabs/hardhat-etherscan": "^3.0.3",
         "@nomiclabs/hardhat-solhint": "^2.0.0",
+        "@nomiclabs/hardhat-truffle5": "^2.0.6",
+        "@nomiclabs/hardhat-waffle": "^2.0.3",
         "@nomiclabs/hardhat-web3": "^2.0.0",
         "@openzeppelin/contracts": "^4.6.0",
         "@openzeppelin/contracts-upgradeable": "^4.6.0",
@@ -67,8 +71,8 @@
     "mocha": {
         "timeout": 10000000
     },
-    "dependencies": {
-        "@nomiclabs/hardhat-web3": "^2.0.0",
-        "@rari-capital/solmate": "^6.4.0"
+    "dependencies": {},
+    "workspaces": {
+        "nohoist": ["hardhat", "hardhat/**"]
     }
 }

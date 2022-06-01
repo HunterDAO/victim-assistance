@@ -4,48 +4,34 @@ pragma solidity ^0.8.4;
 import "./HuntCrowdfunding.sol";
 import "./VictimAssistanceVault.sol";
 import "./governance/HuntRegistry.sol";
-import "./governance/HuntPaymentSplitter.sol";
-import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+// import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeable {
-
-    using AddressUpgradeable for address;
+contract VictimAssistanceFactory is Pausable {
+    
+    // using Address for address;
 
     string public constant title = "HunterDAO - VictimAssistanceFactory";
 
-    bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    // bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
+    // bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     HuntRegistry private registry;
 
-    function initialize(
-        HuntRegistry _registry
-    )
-        external
-        initializer
-    {
-        __VictimAssistanceFactory_init_unchained(_registry);
+    address private opSec;
+
+    modifier onlyOpSec() {
+        require(_msgSender() == opSec);
+        _;
     }
 
-    function __VictimAssistanceFactory_init_unchained(
+    constructor(
         HuntRegistry _registry
-    ) 
-        internal
-        onlyInitializing
-    {
-        grantRole(EXECUTOR_ROLE, _msgSender());
-        grantRole(PAUSER_ROLE, _registry.secOps());
+    ) {
+        // grantRole(EXECUTOR_ROLE, _msgSender());
+        // grantRole(PAUSER_ROLE, _registry.opSec());
 
         registry = _registry;
-
-        __Pausable_init();
-        __AccessControl_init();
-    }
-
-    constructor() {
-        _disableInitializers();
     }
 
     function deployNewCampaign(
@@ -53,37 +39,33 @@ contract HuntCrowdfundingFactory is PausableUpgradeable, AccessControlUpgradeabl
         address payable _beneficiary
     ) 
         public
-        // onlyGovernor
-        onlyRole(EXECUTOR_ROLE)
+        // onlyOwner
+        // onlyRole(EXECUTOR_ROLE)
     {
-        address payable treasury = registry.treasury();
+        // address payable treasury = registry.treasury();
         
-        HuntCrowdfunding campaign = new HuntCrowdfunding();
-        campaign.initialize(
+        HuntCrowdfunding campaign = new HuntCrowdfunding(
             _maximumFunding,
             _beneficiary,
             registry
         );
 
-        VictimAssistanceVault vault = new VictimAssistanceVault();
-        vault.initialize(
+        VictimAssistanceVault vault = new VictimAssistanceVault(
             _beneficiary,
             payable(campaign),
             registry
         );
-
-        PaymentSplitterUpgradeable paymentSplitter = new HuntPaymentSplitter();
-
-        registry.registerVAC(address(campaign), address(vault), payable(paymentSplitter));
+        
+        registry.registerVAC(address(campaign), address(vault));
     }
 
-    function pause() public {
-        require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
+    function pause() public onlyOpSec {
+        // require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistanceFactory: unauthorized");
         _pause();
     }
 
-    function unpause() public {
-        require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistaREQUIREDnceFactory: PAUSER_ROLE REQUIRED");
+    function unpause() public onlyOpSec {
+        // require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistanceFactory: unauthorized");
         _unpause();
     }
 }

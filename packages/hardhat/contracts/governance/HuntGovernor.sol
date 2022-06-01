@@ -1,51 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./HuntRegistry.sol";
-import "./HuntGovernorVotes.sol";
-import "../tokens/HuntToken.sol";
-import "./HuntGovernorQuorum.sol";
-import "../tokens/DonorRewardsNFT.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockControlUpgradeable.sol";
+// import "./HuntRegistry.sol";
+import "@openzeppelin/contracts/governance/Governor.sol";
+import "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
+// import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
 /// @custom:security-contact admin@hunterdao.io
-contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpgradeable, HuntRegistry, GovernorCountingSimpleUpgradeable, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControlUpgradeable {
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(
-        address _hunt,
-        address _donorRewards,
-        address _registry,
-        address payable _treasury,
-        address _victimAssistanceFactory,
-        TimelockControllerUpgradeable _timelock
-    )
-        initializer
-        public
-    {
-        HuntRegistry.initialize(_hunt, _donorRewards, 500, address(this), _treasury, _victimAssistanceFactory);
-        __Governor_init("HuntGovernor");
-        __GovernorSettings_init(13091 /* 2 days */, 32727 /* 5 days */, 1);
-        __GovernorCountingSimple_init();
-        __HuntGovernorVotes_init(_registry);
-        __HuntGovernorQuorum_init(4, _registry);
-        __GovernorTimelockControl_init(_timelock);
-    }
+// , GovernorTimelockControl
+contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction {
+    // , TimelockController _timelock
+    // HuntRegistry _registry
+    constructor(IVotes _token)
+        Governor("HuntGovernor")
+        GovernorSettings(1 /* 1 block | 19636 = 3 days */, 10 /* 1 week */, 1)
+        GovernorVotes(_token)
+        // GovernorVotes(IVotes(_registry.donorRewards()))
+        GovernorVotesQuorumFraction(4)
+        // GovernorTimelockControl(_timelock)
+    {}
 
     // The following functions are overrides required by Solidity.
 
     function votingDelay()
         public
         view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(IGovernor, GovernorSettings)
         returns (uint256)
     {
         return super.votingDelay();
@@ -54,7 +38,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function votingPeriod()
         public
         view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(IGovernor, GovernorSettings)
         returns (uint256)
     {
         return super.votingPeriod();
@@ -63,7 +47,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function quorum(uint256 blockNumber)
         public
         view
-        override(IGovernorUpgradeable, HuntGovernorQuorum)
+        override(IGovernor, GovernorVotesQuorumFraction)
         returns (uint256)
     {
         return super.quorum(blockNumber);
@@ -72,7 +56,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function state(uint256 proposalId)
         public
         view
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+        override
         returns (ProposalState)
     {
         return super.state(proposalId);
@@ -80,7 +64,8 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
 
     function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
         public
-        override(GovernorUpgradeable, IGovernorUpgradeable)
+        // (Governor, IGovernor)
+        override
         returns (uint256)
     {
         return super.propose(targets, values, calldatas, description);
@@ -89,60 +74,22 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function proposalThreshold()
         public
         view
-        override(GovernorUpgradeable, GovernorSettingsUpgradeable)
+        override(Governor, GovernorSettings)
         returns (uint256)
     {
         return super.proposalThreshold();
     }
 
-    // function _getVotes(
-    //     address account,
-    //     uint256 blockNumber,
-    //     bytes memory /* params */
-    // )
-    //     internal
-    //     view
-    //     override(HuntGovernorVotes, HuntGovernorQuorum)
-    //     returns (uint256)
-    // {
-    //     return _getPastVotes(
-    //         account,
-    //         blockNumber
-    //     );
-    // }
-
-    function _getVotes(
-        address account,
-        bytes memory /* params */
-    )
+    function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
         internal
-        view
-        returns (uint256)
-    {
-        return _getVotingUnits(account);
-    }
-
-    function _execute(
-        uint256 proposalId,
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    )
-        internal
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+        override
     {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
-    function _cancel(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 descriptionHash
-    )
+    function _cancel(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
         internal
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+        override
         returns (uint256)
     {
         return super._cancel(targets, values, calldatas, descriptionHash);
@@ -151,7 +98,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function _executor()
         internal
         view
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+        override
         returns (address)
     {
         return super._executor();
@@ -160,7 +107,7 @@ contract HuntGovernor is Initializable, GovernorUpgradeable, GovernorSettingsUpg
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(GovernorUpgradeable, GovernorTimelockControlUpgradeable, AccessControlUpgradeable)
+        override
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
