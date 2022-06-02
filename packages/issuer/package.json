@@ -1,5 +1,5 @@
 {
-  "name": "proxy-issuer-deep-skills-connector",
+  "name": "proxy-issuer-hunterdao-connector",
   "version": "1.0.0",
   "description": "Issue Verifiable data for user profile and store it at Ceramic",
   "main": "index.js",

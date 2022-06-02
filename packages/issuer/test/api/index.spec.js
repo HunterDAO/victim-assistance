@@ -86,7 +86,7 @@ describe('Issuer', async() => {
   //   const data = {
   //     holderDid,
   //     date: new Date().toISOString(),
-  //     instance: 'https://source-cred-deep-skills.com',
+  //     instance: 'https://source-cred-hunterdao.com',
   //     credScore: 100500,
   //   }
 
