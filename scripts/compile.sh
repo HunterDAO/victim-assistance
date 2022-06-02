@@ -6,8 +6,8 @@ rm -rf "./packages/frontend/types/typechain/"
 mkdir -p "./packages/frontend/artifacts/"
 mkdir -p "./packages/frontend/types/typechain/"
 
-yarn clean
-yarn compile
+yarn workspaces contracts clean
+yarn workspaces contracts compile
 
 cp -R -a "./packages/hardhat/artifacts/." "./packages/frontend/artifcacts/"
 cp -R -a "./packages/hardhat/typechain/." "./packages/frontend/typechain/typechain/"
