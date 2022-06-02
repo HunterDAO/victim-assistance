@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// import "hardhat/console.sol";
 // import "./HuntRegistry.sol";
+import "./HuntGovernorVotes.sol";
+import "./HuntGovernorQuorum.sol";
 import "@openzeppelin/contracts/governance/Governor.sol";
-import "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
+// import "@openzeppelin/contracts/governance/utils/Votes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 // import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
 /// @custom:security-contact admin@hunterdao.io
 // , GovernorTimelockControl
-contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction {
+contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, HuntGovernorVotes, HuntGovernorQuorum {
     // , TimelockController _timelock
     // HuntRegistry _registry
-    constructor(IVotes _token)
+    constructor(address _token)
         Governor("HuntGovernor")
         GovernorSettings(1 /* 1 block | 19636 = 3 days */, 10 /* 1 week */, 1)
-        GovernorVotes(_token)
-        // GovernorVotes(IVotes(_registry.donorRewards()))
-        GovernorVotesQuorumFraction(4)
+        HuntGovernorVotes(_token)
+        HuntGovernorQuorum(4)
         // GovernorTimelockControl(_timelock)
     {}
 
@@ -47,7 +47,7 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Gov
     function quorum(uint256 blockNumber)
         public
         view
-        override(IGovernor, GovernorVotesQuorumFraction)
+        override(IGovernor, HuntGovernorQuorum)
         returns (uint256)
     {
         return super.quorum(blockNumber);
@@ -73,11 +73,11 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Gov
 
     function proposalThreshold()
         public
-        view
+        pure
         override(Governor, GovernorSettings)
         returns (uint256)
     {
-        return super.proposalThreshold();
+        return 1;
     }
 
     function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
@@ -102,6 +102,19 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Gov
         returns (address)
     {
         return super._executor();
+    }
+
+    function _getVotes(
+        address account,
+        uint256 blockNumber,
+        bytes memory /*params*/
+    )
+        internal
+        view
+        override(Governor, HuntGovernorVotes)
+        returns (uint256)
+    {
+        return token.getPastVotes(account, blockNumber);
     }
 
     function supportsInterface(bytes4 interfaceId)

@@ -29,7 +29,7 @@ contract FeeRegistry is Ownable {
 		return _staticFee;
 	}
 
-	function getVariableFee(uint256 _yield, uint256 _tapTotal) external returns(uint256 variableFee) {
+	function getVariableFee(uint256 _yield, uint256 _tapTotal) external view returns(uint256 variableFee) {
 		if (!on)
 			return 0;
 

@@ -8,17 +8,17 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
 import "@nomiclabs/hardhat-web3";
-import "@nomiclabs/hardhat-truffle5";
+// import "@nomiclabs/hardhat-truffle5";
 
 import "@nomiclabs/hardhat-solhint";
 import "@nomiclabs/hardhat-etherscan";
 
 // import "@openzeppelin/contracts";
 // import "@openzeppelin/contracts-upgradeable";
-import "@openzeppelin/hardhat-upgrades";
-import "@openzeppelin/hardhat-defender";
+// import "@openzeppelin/hardhat-upgrades";
+// import "@openzeppelin/hardhat-defender";
 
-import "@atixlabs/hardhat-time-n-mine";
+// import "@atixlabs/hardhat-time-n-mine";
 
 // import "hardhat-deploy";
 // import "solidity-coverage";

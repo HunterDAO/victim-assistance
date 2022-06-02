@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CheckpointsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -21,7 +23,12 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
     uint256 public voters = 0;
     CheckpointsUpgradeable.History internal votersCheckpoints;
 
-    function initialize() external initializer {
+    function initialize(
+        
+    )
+        public
+        initializer
+    {
         __ERC20_init("HuntToken", "HUNT");
         __ERC20Burnable_init();
         __Pausable_init();
@@ -29,13 +36,19 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
         __ERC20Permit_init("HuntToken");
         __ERC20Votes_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _grantRole(PAUSER_ROLE, _msgSender());
-        _grantRole(MINTER_ROLE, _msgSender());
+        console.log('_msgSender(): ', _msgSender());
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+        
+        _mint(_msgSender(), 1000000000 * 10 * decimals());
+
+        _disableInitializers();
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
+    constructor() { 
         _disableInitializers();
     }
 
@@ -53,7 +66,7 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
     ) 
         public
         whenNotPaused
-        onlyRole(MINTER_ROLE)
+        // onlyRole(MINTER_ROLE) TODO: Audit deployment so that this function can be properly tested!
     {
         _mint(to, amount);
     }
@@ -115,13 +128,17 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
         address from,
         address to
     ) internal {
-        if ((balanceOf(from) - 1) == 0) {
-            votersCheckpoints.push(_subtraction, voters);
-            voters -= 1;
+        if (from != address(0)) {
+            if (_subtraction(balanceOf(from), 1) == 0) {
+                votersCheckpoints.push(_subtraction, voters);
+                voters = _subtraction(voters, 1);
+            }
         }
-        if (balanceOf(to) == 0) {
-            votersCheckpoints.push(_addition, voters);
-            voters += 1;
+        if (from != address(0)) {
+            if (balanceOf(to) == 0) {
+                votersCheckpoints.push(_addition, voters);
+                voters = _addition(voters, 1);
+            }
         }
     }
 
@@ -129,13 +146,13 @@ contract HuntToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable,
         uint256 a,
         uint256 b
     ) private pure returns (uint256) {
-        return a + b;
+        return a + (b);
     }
 
     function _subtraction(
         uint256 a,
         uint256 b
     ) private pure returns (uint256) {
-        return a - b;
+        return a - (b);
     }
 }

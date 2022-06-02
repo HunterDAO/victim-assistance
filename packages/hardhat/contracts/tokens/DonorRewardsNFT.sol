@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+// import "hardhat/console.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Checkpoints.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/draft-ERC721Votes.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/Checkpoints.sol";
 
 /// @custom:security-contact admin@hunterdao.io
 contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, Ownable, EIP712, ERC721Votes {
 
     using Counters for Counters.Counter;
     using Checkpoints for Checkpoints.History;
-
-    // uint256 internal nTokens = 1;
 
     uint256 internal voters = 0;
     Checkpoints.History internal votersCheckpoints;
@@ -27,20 +25,17 @@ contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable
 
     mapping(uint256 => string) private _tokenURIs;
 
-    constructor() ERC721("DonorRewardsNFT", "HDDR") EIP712("DonorRewardsNFT", "1") {
-        // __ERC721_init("DonorRewardsNFT", "HDDR");
-        // __ERC721Enumerable_init();
-        // __ERC721URIStorage_init();
-        // __Pausable_init();
-        // __Ownable_init();
-        // __EIP712_init("DonorRewardsNFT", "1");
-        // __ERC721Votes_init();
-    }
+    event SetTokenURI(uint256 tokenId, string uri);
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    // constructor() {
-        // _disableInitializers();
-    // }
+    constructor() 
+        ERC721("DonorRewardsNFT", "HDDR") 
+        ERC721Enumerable()
+        EIP712("DonorRewardsNFT", "1")
+        ERC721URIStorage()
+        Pausable()
+        Ownable()
+        ERC721Votes()
+    { }
 
     function pause() public onlyOwner {
         _pause();
@@ -60,6 +55,7 @@ contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable
     {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
+        // console.log('tokenId: ', tokenId);
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
     }
@@ -85,6 +81,7 @@ contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable
 
     function _setTokenURI(uint256 tokenId, string memory uri) internal override {
         _tokenURIs[tokenId] = uri;
+        emit SetTokenURI(tokenId, uri);
     }
 
     function _beforeTokenTransfer(
