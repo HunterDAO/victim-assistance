@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "yarn workspace victim-assistance-dapp dev",
-    "build": "yarn workspace victim-assistance-dapp build",
-    "start": "yarn workspace victim-assistance-dapp start",
-    "chain": "yarn workspace victim-assistance-contracts chain",
-    "deploy": "yarn workspace victim-assistance-contracts deploy",
-    "compile": "yarn workspace victim-assistance-contracts compile"
+    "dev": "yarn workspace dapp dev",
+    "build": "yarn workspace dapp build",
+    "start": "yarn workspace dapp start",
+    "chain": "yarn workspace contracts chain",
+    "deploy": "yarn workspace contracts deploy",
+    "compile": "yarn workspace contracts compile && yarn workspace contracts copy"
   },
   "workspaces": {
     "packages": [

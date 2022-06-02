@@ -29,7 +29,9 @@ node_modules
 packages/hardhat/*.txt
 packages/hardhat/cache
 packages/hardhat/artifacts
+packages/frontend/artifacts/**
 packages/hardhat/deployments
+packages/frontend/types/typechain/**
 yarn.lock
 
 ## Frontend Files ##

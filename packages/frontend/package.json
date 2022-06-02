@@ -3,6 +3,7 @@
   "author": "@HunterDAO",
   "license": "Apache",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -30,6 +31,7 @@
     "@chakra-ui/react": "^1.6.3",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
+    "@self.id/framework": "^0.3.2",
     "@usedapp/core": "^0.4.1",
     "@web3-react/walletconnect-connector": "^6.2.0",
     "@web3-react/walletlink-connector": "^6.2.3",
@@ -38,6 +40,7 @@
     "ethers": "^5.1.4",
     "framer-motion": "^4",
     "graphql": "^15.3.0",
+    "lit-ceramic-sdk": "^1.1.13",
     "lodash": "4.17.20",
     "next": "^11.0.1",
     "react": "^17.0.1",
@@ -64,5 +67,8 @@
     "lint-staged": "^10.0.10",
     "prettier": "^2.0.2",
     "typescript": "^4.3.2"
+  },
+  "workspaces": {
+
   }
 }
