@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "generateSeed": "node ./scripts/generateSeed",
+    "generate-seed": "node ./scripts/generateSeed",
     "test": "NODE_ENV=test nyc --reporter=lcov --reporter=text _mocha --exit --timeout 25000",
     "create-model": "node --experimental-json-modules ./scripts/create-model.mjs",
     "create-model-colony": "node --experimental-json-modules ./scripts/create-model-colony.mjs",

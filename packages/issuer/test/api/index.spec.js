@@ -16,7 +16,7 @@ describe('Issuer', async() => {
   //     holderDid,
   //     reputations: [
   //       {
-  //         colonyname: 'DeepSkills',
+  //         colonyname: 'HunterDAO',
   //         colonyaddress: 'xDaiContract',
   //         reputation: '99%'
   //       }
@@ -43,8 +43,8 @@ describe('Issuer', async() => {
     const type = 'apeprofiles'
     const data = {
       holderDid,
-      circle: 'DeepSkill Circle',
-      skills: ['Web3', 'Fronend', 'Fullstack'],
+      circle: 'HunterDAO Circle',
+      skills: ['Web3', 'Frontend', 'Fullstack'],
       givesReceived: 4,
       notes: ['Made a good progress with implementation coordindape'],
       collaborators: [{
@@ -105,7 +105,7 @@ describe('Issuer', async() => {
   //   const data = {
   //     holderDid,
   //     servers: [{
-  //       servername: 'DeepSkills',
+  //       servername: 'HunterDAO',
   //       serverid: 'someId',
   //       servericon: 'https://cdn.discordapp.com/icons/{guild.id}/{guild.icon}.png'
   //     }]
