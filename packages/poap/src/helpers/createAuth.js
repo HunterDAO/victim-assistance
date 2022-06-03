@@ -10,7 +10,7 @@ const createAuth = () => {
 
   const payload = {
     iss: 'poap-connector',
-    aud: 'deep-skills-issuer',
+    aud: 'hunterdao-issuer',
     exp: expiresAt,
   }
 
