@@ -16,12 +16,12 @@
     "create-model-poap": "node --experimental-json-modules ./scripts/create-model-poap.mjs",
     "create-model-sourcecred": "node --experimental-json-modules ./scripts/create-model-sourcecred.mjs"
   },
+  "author": "HunterDAO",
+  "license": "ISC",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HunterDao/victim-assistance.git"
   },
-  "author": "Denis Popov",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/HunterDao/victim-assistance/issues"
   },

@@ -1,14 +1,30 @@
 {
   "name": "victim-assistance",
+  "author": "HunterDAO",
   "version": "1.0.0",
+  "license": "ISC",
   "private": true,
+  "homepage": "https://github.com/HunterDAO/victim-assistance#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HunterDAO/victim-assistance.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HunterDAO/victim-assistance/issues"
+  },
   "scripts": {
     "dev": "yarn workspace dapp dev",
+    "test": "sh ./scripts/full-test.sh",
     "build": "yarn workspace dapp build",
     "start": "yarn workspace dapp start",
+    "compile": "./scripts/compile.sh",
     "chain": "yarn workspace contracts chain",
     "deploy": "yarn workspace contracts deploy",
-    "compile": "scripts/compile.sh"
+    "full-install": "sh ./scripts/full-install.sh",
+    "start-system": "sh ./scripts/system-start.sh",
+    "issuer-test": "yarn workspace issuer run test",
+    "generate-seed": "yarn workspace generate-seed",
+    "source-cred-start": "yarn workspace source-cred-hunterdao-connector start"
   },
   "workspaces": {
     "packages": [

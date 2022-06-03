@@ -20,7 +20,7 @@
         "LICENSE",
         "README.md"
     ],
-    "author": "@HunterDAO",
+    "author": "HunterDAO",
     "license": "Apache",
     "devDependencies": {
         "@atixlabs/hardhat-time-n-mine": "^0.0.5",
