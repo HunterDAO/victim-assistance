@@ -22,8 +22,8 @@
     "deploy": "yarn workspace contracts deploy",
     "full-install": "sh ./scripts/full-install.sh",
     "start-system": "sh ./scripts/system-start.sh",
-    "issuer-test": "yarn workspace proxy-issuer-hunterdao-connector run test",
-    "generate-seed": "yarn workspace proxy-issuer-hunterdao-connector generate-seed",
+    "issuer-test": "yarn workspace issuer run test",
+    "generate-seed": "yarn workspace generate-seed",
     "source-cred-start": "yarn workspace source-cred-hunterdao-connector start"
   },
   "workspaces": {

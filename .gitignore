@@ -29,6 +29,7 @@ node_modules
 packages/hardhat/*.txt
 packages/hardhat/cache
 packages/hardhat/artifacts
+packages/frontend/artifacts/**
 packages/hardhat/deployments
 packages/frontend/types/typechain/**
 yarn.lock
@@ -43,5 +44,3 @@ packages/frontend/out/
 packages/frontend/build
 # contracts
 packages/frontend/artifacts/*
-packages/frontend/artifacts/hardhat/*
-
