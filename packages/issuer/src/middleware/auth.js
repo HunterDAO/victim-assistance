@@ -8,7 +8,7 @@ TRUSTED_PUBLIC_KEY = TRUSTED_PUBLIC_KEY.replace(/\\n/g, '\n')
 const trustedTokenIssuers = [
   'coordinape-connector',
   'github-connector',
-  // 'discord-connector',
+  'discord-connector',
   // 'sourceCred-connector',
   'poap-connector',
 ]
