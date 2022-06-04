@@ -1,53 +1,52 @@
-'use strict'
+'use strict';
 
-const typeis     = require('type-is')
-const getRawBody = require('raw-body')
-const onFinished = require('on-finished')
+const typeis     = require('type-is');
+const getRawBody = require('raw-body');
+const onFinished = require('on-finished');
 
-const DEFAULT_JSON_SIZE_LIMIT = '2mb'
+const DEFAULT_JSON_SIZE_LIMIT = '2mb';
 
 const isJson = req => {
-  return typeis(req, ['application/json'])
+  return typeis(req, ['application/json']);
 }
 
 const jsonBody = (limit = DEFAULT_JSON_SIZE_LIMIT) => {
   return (req, res, next) => {
     if (!isJson(req)) {
-      return next()
+      return next();
     }
 
-    req.body = {}
+    req.body = {};
 
     if (!typeis.hasBody(req)) {
-      return next()
+      return next();
     }
 
     getRawBody(req, { limit,  encoding: 'utf-8' }, (rawBodyError, buffer) => {
       if (rawBodyError) {
-        const error = new Error(rawBodyError)
+        const error = new Error(rawBodyError);
 
-        req.resume()
-        return onFinished(req, () => next(error))
+        req.resume();
+        return onFinished(req, () => next(error));
       }
 
-      const text = buffer.toString()
+      const text = buffer.toString();
 
       if (!text) {
-        return next()
+        return next();
       }
 
       try {
-        req.body = JSON.parse(text)
+        req.body = JSON.parse(text);
 
       } catch (parsingError) {
-        const error = new Error(parsingError)
-        return next(error)
-
+        const error = new Error(parsingError);
+        return next(error);
       }
 
-      return next()
+      return next();
     })
   }
 }
 
-module.exports = jsonBody
+module.exports = jsonBody;

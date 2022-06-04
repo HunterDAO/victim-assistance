@@ -1,8 +1,8 @@
 'use strict'
 
-const { knownDataTypes } = require('../helpers/index')
-const { ethers } = require('ethers')
-const bip39 = require('bip39')
+const { knownDataTypes } = require('../helpers/index');
+const { ethers } = require('ethers');
+const bip39 = require('bip39');
 
 const { SEED } = process.env
 

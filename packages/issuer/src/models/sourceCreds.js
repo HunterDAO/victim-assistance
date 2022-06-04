@@ -89,6 +89,6 @@
 //       "version": "k3y52l7qbv1fry88wa9k2bjj1o5bb7th98s4wxdtme0jkozb6nz0l41dfuu69bke8"
 //     }
 //   }
-// }
+// };
 
-// module.exports = sourcecredModel
+// module.exports = sourcecredModel;

@@ -89,6 +89,6 @@ const apeModel = {
       "version": "k3y52l7qbv1frylkzbch264sgsqqajg7lhvrsm635v9x2un3xr7y8mpzcps27y2v4"
     }
   }
-}
+};
 
-module.exports = apeModel
+module.exports = apeModel;

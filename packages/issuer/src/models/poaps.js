@@ -89,5 +89,6 @@ const poapModel = {
       "version": "k3y52l7qbv1fry9v6xe0w86dhoiw8iyneaopheweqe1ub0e76cjpaouwe911n3cw0"
     }
   }
-}
-module.exports = poapModel
+};
+
+module.exports = poapModel;

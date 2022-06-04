@@ -89,6 +89,6 @@ const githubModel = {
       "version": "k3y52l7qbv1fry8xf6taorsdf3yfu4nm7ukb4ctl0kl8mbvnj4m5jxy0ei3gmyuio"
     }
   }
-}
+};
 
-module.exports = githubModel
+module.exports = githubModel;

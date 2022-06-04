@@ -89,5 +89,6 @@ const discordModel = {
       "version": "k3y52l7qbv1frydh4m0qu4hvbaziy46we3lnre3lxtokrf6w043q8sbr7ny4ygc8w"
     }
   }
-}
-module.exports = discordModel
+};
+
+module.exports = discordModel;

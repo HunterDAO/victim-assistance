@@ -1,9 +1,16 @@
 'use strict'
 
-const express = require('express')
-const router  = express.Router()
-const issueStructeredData = require('./issueStructeredData')
+const express = require('express');
+const router  = express.Router();
+const getPoapTokens = require('./getPoapTokens');
+const getGithubData = require('./github/callback');
+const getCoordinapeData = require('./getCoordinapeData');
+const issueStructeredData = require('./structeredData').issueStructeredData;
 
-router.route('/issueStructeredData').post(issueStructeredData)
+router.route('/poaps').post(getPoapTokens);
+router.route('/github').post(getGithubData);
+router.route('/coordinape').post(getCoordinapeData);
 
-module.exports = router
+router.route('/issueStructeredData').post(issueStructeredData);
+
+module.exports = router;
