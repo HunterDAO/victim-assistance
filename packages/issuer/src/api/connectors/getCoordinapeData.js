@@ -1,5 +1,5 @@
 'use strict'
-const CoordinApeService = require('../services/coordinApeService');
+const CoordinApeService = require('../services/coordinapeService');
 const IssuerService = require('../../services/issuerService');
 const fetchStructuredData = require('../structeredData').fetchStructuredData;
 
