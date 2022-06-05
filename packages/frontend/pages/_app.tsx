@@ -8,7 +8,7 @@ import {
 } from '@usedapp/core'
 import type { AppProps } from 'next/app'
 import React from 'react'
-import { MulticallContract } from '../artifacts/contracts/contractAddress'
+//import { MulticallContract } from '../artifacts/contracts/contractAddress'
 import { useApollo } from '../lib/apolloClient'
 
 // scaffold-eth's INFURA_ID, SWAP IN YOURS FROM https://infura.io/dashboard/ethereum
@@ -29,11 +29,13 @@ const config: Config = {
     ChainId.xDai,
     ChainId.Localhost,
     ChainId.Hardhat,
+    ChainId.Mumbai,
+    ChainId.Polygon
   ],
   multicallAddresses: {
     ...MULTICALL_ADDRESSES,
-    [ChainId.Hardhat]: MulticallContract,
-    [ChainId.Localhost]: MulticallContract,
+    //[ChainId.Hardhat]: MulticallContract,
+    //[ChainId.Localhost]: MulticallContract,
   },
 }
 
