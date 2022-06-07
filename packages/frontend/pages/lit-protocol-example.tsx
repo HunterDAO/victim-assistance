@@ -49,9 +49,9 @@ function LitProtocolExample(): JSX.Element {
   const { library, chainId } = useEthers();
   const [cond, setCond] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [chain, setChain] = useState('mumbai');
+  const [chain, setChain] = useState('mumbai'); // eslint-disable-line
   const [strEncrypted, setStrEncrypted] = useState('');
-  const [contractAddress, setContractAddress] = useState('0x938a5Edb375DDe749616232f7f4F628D6610684c');
+  const [contractAddress, setContractAddress] = useState('0x938a5Edb375DDe749616232f7f4F628D6610684c'); // eslint-disable-line
   const [strToBeEncrypt, setStrToBeEncrypt] = useState('Input here the string that will be encrypted by lit protocol');
   const [symEncrypted, setSymEncrypted] = useState('');
 
@@ -62,51 +62,45 @@ function LitProtocolExample(): JSX.Element {
       //INIT LIT CLIENT
       const client = new LitJsSdk.LitNodeClient();
       await client.connect();
+      // eslint-disable-next-line
       //@ts-ignore
       window.litNodeClient = client;
     }
-
-    init()
-
-  }, [])
+    init();
+  }, []);
 
 
 
   async function getFlag() {
-
-
     if (chainId == 80001) {
-
-      const signer = library?.getSigner();
-      const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer);
-      if (signer) {
-        try {
-          const res = await c.getFlag();
-          alert(res);
-          setCond(res);
-        } catch (e) {
-          alert(e);
+        const signer = library?.getSigner();
+        const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer);
+        if (signer) {
+          try {
+            const res = await c.getFlag();
+            alert(res);
+            setCond(res);
+          } catch (e) {
+            alert(e);
+          }
         }
-
-      }
-    } else { alert('connect changing to mumbai network') }
+      } else {
+        alert('connect changing to mumbai network');
+    }
   }
 
   async function setCondition() {
-
     if (chainId == 80001) {
-
-
       const signer = library?.getSigner();
       const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer);
       if (signer) {
         try {
           setLoading(true);
           const oldCond = await c.getFlag();
-          console.log(oldCond, '->', !oldCond);
-          const tx = await c.setCondition(!oldCond);
+          console.log(oldCond, '->', !oldCond); // eslint-disable-line
+          const tx = await c.setCondition(!oldCond); 
           const receipt = await tx.wait();
-          console.log(receipt);
+          console.log(receipt); // eslint-disable-line
           setLoading(false);
           setCond(!oldCond);
           alert(receipt.transactionHash);
@@ -114,10 +108,8 @@ function LitProtocolExample(): JSX.Element {
           setLoading(false);
           alert(e);
         }
-
       }
     } else {
-
       alert('connect changing to mumbai network');
     }
   }
@@ -128,14 +120,14 @@ function LitProtocolExample(): JSX.Element {
       const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
         strToBeEncrypt
       );
-      console.log('encryptedString', encryptedString);
-      console.log('symmetricKey', symmetricKey);
+      console.log('encryptedString', encryptedString); // eslint-disable-line
+      console.log('symmetricKey', symmetricKey); // eslint-disable-line
       const encryptedStringBase64 = uint8arrayToString(
         new Uint8Array(await encryptedString.arrayBuffer()),
         "base64"
       );
       setStrEncrypted(encryptedStringBase64);
-      console.log('encryptedStringBase64', encryptedStringBase64);
+      console.log('encryptedStringBase64', encryptedStringBase64); // eslint-disable-line
       const evmContractConditions =
         [
           {
@@ -163,6 +155,7 @@ function LitProtocolExample(): JSX.Element {
             },
           },
         ];
+      // eslint-disable-next-line
       //@ts-ignore
       const encSymmetricKey = await window.litNodeClient.saveEncryptionKey({
         evmContractConditions,
@@ -170,12 +163,12 @@ function LitProtocolExample(): JSX.Element {
         authSig,
         chain,
       });
-      console.log(encSymmetricKey);
+      console.log(encSymmetricKey); // eslint-disable-line
       const encSymmetricStringBase64 = uint8arrayToString(
         encSymmetricKey,
         "base64"
       );
-      console.log('encSymmetricStringBase64', encSymmetricStringBase64);
+      console.log('encSymmetricStringBase64', encSymmetricStringBase64); // eslint-disable-line
       setSymEncrypted(encSymmetricStringBase64);
     } catch (e: any) { alert(e.message) }
   }
@@ -213,7 +206,8 @@ function LitProtocolExample(): JSX.Element {
         symEncrypted,
         "base64"
       );
-      //@ts-ignore
+      // eslint-disable-next-line
+      // @ts-ignore
       const symmetricKey = await window.litNodeClient.getEncryptionKey({
         evmContractConditions,
         // Note, below we convert the encryptedSymmetricKey from a UInt8Array to a hex string.  
