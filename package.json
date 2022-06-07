@@ -17,6 +17,7 @@
     "test": "sh ./scripts/test.sh",
     "test:contracts": "yarn workspace contracts run test",
     "test:issuer": "yarn workspace hunterdao-proxy-issuer run test",
+    "lint:dapp": "yarn workspace dapp lint",
     "build": "yarn workspace dapp build",
     "start": "sh ./scripts/start.sh",
     "start:dapp": "yarn workspace dapp start",

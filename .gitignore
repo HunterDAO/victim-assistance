@@ -34,6 +34,7 @@ packages/hardhat/cache
 packages/hardhat/artifacts
 packages/frontend/artifacts/**
 packages/hardhat/deployments
+packages/frontend/types/
 packages/frontend/types/typechain/**
 yarn.lock
 
