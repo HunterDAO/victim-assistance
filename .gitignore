@@ -16,6 +16,8 @@ yarn-error.log*
 
 # local env files
 .secrets.js
+.env.project
+.env.development.project
 .env.local
 .env.development.local
 .env.test.local
