@@ -35,10 +35,10 @@ const config: Config = {
   ],
   multicallAddresses: {
     ...MULTICALL_ADDRESSES,
-  //   [ChainId.Hardhat]: MulticallContract,
-  //   [ChainId.Localhost]: MulticallContract,
+    // [ChainId.Hardhat]: MulticallContract,
+    // [ChainId.Localhost]: MulticallContract,
   },
-};
+}
 
 // const AppContainer = dynamic(import('./'), {ssr: false});
 
