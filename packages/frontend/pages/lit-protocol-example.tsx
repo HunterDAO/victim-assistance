@@ -8,7 +8,6 @@ import {
   Spinner
 } from '@chakra-ui/react'
 import { useEthers } from '@usedapp/core'
-
 import Layout from '../components/layout/Layout'
 import LitJsSdk from 'lit-js-sdk'
 import { toString as uint8arrayToString } from "uint8arrays/to-string";
@@ -50,21 +49,21 @@ function LitProtocolExample(): JSX.Element {
   const { library, chainId } = useEthers();
   const [cond, setCond] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [chain, setChain] = useState('mumbai')
-  const [strEncrypted, setStrEncrypted] = useState('')
-  const [contractAddress, setContractAddress] = useState('0x938a5Edb375DDe749616232f7f4F628D6610684c')
-  const [strToBeEncrypt, setStrToBeEncrypt] = useState('Input here the string that will be encrypted by lit protocol')
-  const [symEncrypted, setSymEncrypted] = useState('')
+  const [chain, setChain] = useState('mumbai');
+  const [strEncrypted, setStrEncrypted] = useState('');
+  const [contractAddress, setContractAddress] = useState('0x938a5Edb375DDe749616232f7f4F628D6610684c');
+  const [strToBeEncrypt, setStrToBeEncrypt] = useState('Input here the string that will be encrypted by lit protocol');
+  const [symEncrypted, setSymEncrypted] = useState('');
 
 
   useEffect(() => {
 
     async function init() {
       //INIT LIT CLIENT
-      const client = new LitJsSdk.LitNodeClient()
-      await client.connect()
+      const client = new LitJsSdk.LitNodeClient();
+      await client.connect();
       //@ts-ignore
-      window.litNodeClient = client
+      window.litNodeClient = client;
     }
 
     init()
@@ -78,15 +77,15 @@ function LitProtocolExample(): JSX.Element {
 
     if (chainId == 80001) {
 
-      const signer = library?.getSigner()
-      const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer)
+      const signer = library?.getSigner();
+      const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer);
       if (signer) {
         try {
-          const res = await c.getFlag()
-          alert(res)
-          setCond(res)
+          const res = await c.getFlag();
+          alert(res);
+          setCond(res);
         } catch (e) {
-          alert(e)
+          alert(e);
         }
 
       }
@@ -98,45 +97,45 @@ function LitProtocolExample(): JSX.Element {
     if (chainId == 80001) {
 
 
-      const signer = library?.getSigner()
-      const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer)
+      const signer = library?.getSigner();
+      const c = new ethers.Contract('0x938a5Edb375DDe749616232f7f4F628D6610684c', abi, signer);
       if (signer) {
         try {
-          setLoading(true)
-          const oldCond = await c.getFlag()
-          console.log(oldCond, '->', !oldCond)
-          const tx = await c.setCondition(!oldCond)
+          setLoading(true);
+          const oldCond = await c.getFlag();
+          console.log(oldCond, '->', !oldCond);
+          const tx = await c.setCondition(!oldCond);
           const receipt = await tx.wait();
-          console.log(receipt)
-          setLoading(false)
-          setCond(!oldCond)
-          alert(receipt.transactionHash)
+          console.log(receipt);
+          setLoading(false);
+          setCond(!oldCond);
+          alert(receipt.transactionHash);
         } catch (e) {
-          setLoading(false)
-          alert(e)
+          setLoading(false);
+          alert(e);
         }
 
       }
     } else {
 
-      alert('connect changing to mumbai network')
+      alert('connect changing to mumbai network');
     }
   }
 
   async function encrypt() {
     try {
-      const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: chain })
+      const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: chain });
       const { encryptedString, symmetricKey } = await LitJsSdk.encryptString(
         strToBeEncrypt
       );
-      console.log('encryptedString', encryptedString)
-      console.log('symmetricKey', symmetricKey)
+      console.log('encryptedString', encryptedString);
+      console.log('symmetricKey', symmetricKey);
       const encryptedStringBase64 = uint8arrayToString(
         new Uint8Array(await encryptedString.arrayBuffer()),
         "base64"
       );
-      setStrEncrypted(encryptedStringBase64)
-      console.log('encryptedStringBase64', encryptedStringBase64)
+      setStrEncrypted(encryptedStringBase64);
+      console.log('encryptedStringBase64', encryptedStringBase64);
       const evmContractConditions =
         [
           {
@@ -171,13 +170,13 @@ function LitProtocolExample(): JSX.Element {
         authSig,
         chain,
       });
-      console.log(encSymmetricKey)
+      console.log(encSymmetricKey);
       const encSymmetricStringBase64 = uint8arrayToString(
         encSymmetricKey,
         "base64"
       );
-      console.log('encSymmetricStringBase64', encSymmetricStringBase64)
-      setSymEncrypted(encSymmetricStringBase64)
+      console.log('encSymmetricStringBase64', encSymmetricStringBase64);
+      setSymEncrypted(encSymmetricStringBase64);
     } catch (e: any) { alert(e.message) }
   }
   async function decrypt() {
@@ -209,7 +208,7 @@ function LitProtocolExample(): JSX.Element {
             },
           },
         ];
-      const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: chain })
+      const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: chain });
       const check = uint8arrayFromString(
         symEncrypted,
         "base64"
@@ -228,20 +227,20 @@ function LitProtocolExample(): JSX.Element {
         strEncrypted,
         "base64"
       ).buffer;
-      const blob = new Blob([arrayBuffer])
+      const blob = new Blob([arrayBuffer]);
       const decryptedString = await LitJsSdk.decryptString(
         blob,
         symmetricKey
       );
       alert(decryptedString)
-      alert('try setting the condition to false  to see that the decrypting authorization condition changed')
+      alert('try setting the condition to false  to see that the decrypting authorization condition changed');
     } catch (e: any) {
-      alert(e.message)
-      alert('if you saw some message error from lit protocol, it means that you should set the condition to true')
+      alert(e.message);
+      alert('if you saw some message error from lit protocol, it means that you should set the condition to true');
     }
   }
   function handleStr(e) {
-    setStrToBeEncrypt(e.target.value)
+    setStrToBeEncrypt(e.target.value);
   }
   return (
     <Layout>
@@ -261,4 +260,4 @@ function LitProtocolExample(): JSX.Element {
   )
 }
 
-export default LitProtocolExample
+export default LitProtocolExample;
