@@ -21,6 +21,7 @@ type StateType = {
   messageToVerify: string
   verificationSuccess: boolean
 }
+
 type ActionType =
   | {
       type: 'SET_SIGNATURE'

@@ -10,19 +10,23 @@ import "@openzeppelin/contracts/governance/Governor.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 // import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
-
+// import "../VictimAssistanceFactory.sol";
 /// @custom:security-contact admin@hunterdao.io
 // , GovernorTimelockControl
 contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, HuntGovernorVotes, HuntGovernorQuorum {
     // , TimelockController _timelock
     // HuntRegistry _registry
-    constructor(address _token)
+
+    // VictimAssistanceFactory public victimAssistanceFactory;
+    constructor(address _token, address _victimAssistanceFactory)
         Governor("HuntGovernor")
         GovernorSettings(1 /* 1 block | 19636 = 3 days */, 10 /* 1 week */, 1)
         HuntGovernorVotes(_token)
         HuntGovernorQuorum(4)
         // GovernorTimelockControl(_timelock)
-    {}
+    {
+        // victimAssistanceFactory = VictimAssistanceFactory(_victimAssistanceFactory);
+    }
 
     // The following functions are overrides required by Solidity.
 
@@ -104,14 +108,14 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
         return super._executor();
     }
 
-    function _getVotes(
+    function getVotes(
         address account,
         uint256 blockNumber,
         bytes memory /*params*/
     )
-        internal
+        public
         view
-        override(Governor, HuntGovernorVotes)
+        // override(Governor, HuntGovernorVotes)
         returns (uint256)
     {
         return token.getPastVotes(account, blockNumber);

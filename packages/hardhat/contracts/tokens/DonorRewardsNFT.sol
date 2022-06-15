@@ -77,6 +77,23 @@ contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable
         return votersCheckpoints.getAtBlock(blockNumber);
     } 
 
+    function getVotes(address account) public view override returns (uint256) {
+        if (balanceOf(account) >= 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } 
+
+    function getPastVotes(address account, uint256 blockNumber) public view override returns (uint256) {
+        if (super.getPastVotes(account, blockNumber) > 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+ 
+
     // The following functions are overrides required by Solidity.
 
     function _setTokenURI(uint256 tokenId, string memory uri) internal override {
@@ -122,6 +139,14 @@ contract DonorRewardsNFT is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable
                 votersCheckpoints.push(_addition, voters);
                 voters += 1;
             }
+        }
+    }
+
+    function _getVotingUnits(address account) internal view override returns (uint256) {
+        if (balanceOf(account) >= 1) {
+            return 1;
+        } else {
+            return 0;
         }
     }
 

@@ -10,8 +10,8 @@ import {
 import { useNotifications } from '@usedapp/core'
 import { truncateHash } from '../../lib/utils'
 import Head, { MetaProps } from './Head'
-import Navbar from './Navbar'
 import Footer from './Footer'
+import Nav from './Nav'
 
 // Extends `window` to add `ethereum`.
 declare global {
@@ -48,7 +48,7 @@ const Layout = ({ children, customMeta }: LayoutProps): JSX.Element => {
   return (
     <>
       <Head customMeta={customMeta} />
-      <Navbar />
+      <Nav />
       <main>
         <Container maxWidth="container.xl">
           {children}

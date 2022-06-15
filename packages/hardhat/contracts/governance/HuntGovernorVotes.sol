@@ -27,6 +27,6 @@ abstract contract HuntGovernorVotes is Governor {
         uint256 blockNumber,
         bytes memory /*params*/
     ) internal view virtual override returns (uint256) {
-        return token.getPastVotes(account, blockNumber);
+        return token.getVotes(account);
     }
 }

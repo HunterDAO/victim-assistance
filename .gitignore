@@ -16,6 +16,8 @@ yarn-error.log*
 
 # local env files
 .secrets.js
+.env.project
+.env.development.project
 .env.local
 .env.development.local
 .env.test.local
@@ -32,6 +34,7 @@ packages/hardhat/cache
 packages/hardhat/artifacts
 packages/frontend/artifacts/**
 packages/hardhat/deployments
+packages/frontend/types/
 packages/frontend/types/typechain/**
 yarn.lock
 
