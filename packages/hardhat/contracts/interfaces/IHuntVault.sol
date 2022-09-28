@@ -42,5 +42,5 @@ interface IHuntVault {
     /**
       * @notice Emitted when the collected tokens were withdrawn.
       */
-    event WithdrawlToken(address indexed token, address beneficiary, uint256 amount);
+    event WithdrawlTokens(address indexed token, address beneficiary, uint256 amount);
 }

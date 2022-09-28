@@ -97,7 +97,7 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
     }
 
     function withdrawToken(
-        IERC20 token,
+        IERC20 token, 
         uint256 value
     ) 
         external
@@ -114,7 +114,7 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
             "#withdraw: Value error."
         );
         SafeERC20.safeTransfer(IERC20(token), beneficiary, value);
-        emit WithdrawlToken(address(token), _msgSender(), value);
+        emit WithdrawlTokens(address(token), _msgSender(), value);
     }
 
     function numSpenders() external view returns (uint256) {
