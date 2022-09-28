@@ -19,14 +19,29 @@ abstract contract HuntGovernorVotes is Governor {
         token = ERC721Votes(tokenAddress);
     }
 
-    /**
-     * Read the voting weight from the token's built in snapshot mechanism (see {Governor-_getVotes}).
-     */
+    function _getVotes(
+        address account,
+        bytes memory /*params*/
+    ) 
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        return token.getVotes(account);
+    }
+
     function _getVotes(
         address account,
         uint256 blockNumber,
         bytes memory /*params*/
-    ) internal view virtual override returns (uint256) {
-        return token.getVotes(account);
+    ) 
+        internal
+        view
+        virtual
+        override 
+        returns (uint256)
+    {
+        return token.getPastVotes(account, blockNumber);
     }
 }
