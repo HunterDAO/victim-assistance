@@ -22,7 +22,7 @@ interface IHuntVault {
       * @dev Can only be called by the beneficiary. Token must be a valid ERC20 contract.
       * @param token Token contract address.
       */
-    function withdrawTokens(IERC20 token) external;
+    function withdrawToken(IERC20 token, uint256 value) external;
 
     /**
       * @notice Emitted when a deposit is received
@@ -42,5 +42,5 @@ interface IHuntVault {
     /**
       * @notice Emitted when the collected tokens were withdrawn.
       */
-    event WithdrawlTokens(address indexed token, address beneficiary, uint256 amount);
+    event WithdrawlToken(address indexed token, address beneficiary, uint256 amount);
 }

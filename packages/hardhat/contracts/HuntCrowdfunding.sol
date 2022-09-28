@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./governance/HuntRegistry.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -43,7 +42,6 @@ contract HuntCrowdfunding is Ownable, Pausable {
     address payable  benificiary;
     address private vault;
 
-    HuntRegistry private registry;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -59,15 +57,14 @@ contract HuntCrowdfunding is Ownable, Pausable {
 
     constructor(
         uint256 _maximumFunding,
-        address payable _beneficiary,
-        HuntRegistry _registry
+        address payable _beneficiary
     ) {
         campaignStatus = CampaignStatus.Active;
         maximumFunding = _maximumFunding;
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
         benificiary = _beneficiary;
-        registry = _registry;
+        // registry = _registry;
     }
 
     receive () external whenActive payable {

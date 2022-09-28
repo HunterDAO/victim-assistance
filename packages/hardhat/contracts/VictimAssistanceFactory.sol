@@ -3,69 +3,73 @@ pragma solidity ^0.8.4;
 
 import "./HuntCrowdfunding.sol";
 import "./VictimAssistanceVault.sol";
-import "./governance/HuntRegistry.sol";
+// import "./governance/HuntRegistry.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-// import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract VictimAssistanceFactory is Pausable {
+contract VictimAssistanceFactory is Pausable, AccessControl {
     
     // using Address for address;
 
-    string public constant title = "HunterDAO - VictimAssistanceFactory";
+    // string public constant title = "HunterDAO - VictimAssistanceFactory";
 
     // bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     // bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    HuntRegistry private registry;
+    // HuntRegistry private registry;
 
-    address private opSec;
+    // address private opSec;
 
-    modifier onlyOpSec() {
-        require(_msgSender() == opSec);
-        _;
-    }
+    address public governor;
+
+    // modifier onlyOpSec() {
+    //     require(_msgSender() == opSec);
+    //     _;
+    // }
 
     constructor(
-        HuntRegistry _registry
+        address _governor
+        // HuntRegistry _registry
     ) {
+        governor = _governor;
         // grantRole(EXECUTOR_ROLE, _msgSender());
         // grantRole(PAUSER_ROLE, _registry.opSec());
 
-        registry = _registry;
+        // registry = _registry;
     }
 
     function deployNewCampaign(
         uint256 _maximumFunding,
-        address payable _beneficiary
+        address payable _beneficiary,
+        uint256 _fee
     ) 
         public
-        // onlyOwner
-        // onlyRole(EXECUTOR_ROLE)
     {
         // address payable treasury = registry.treasury();
         
         HuntCrowdfunding campaign = new HuntCrowdfunding(
             _maximumFunding,
-            _beneficiary,
-            registry
+            _beneficiary
+            // registry
         );
 
-        VictimAssistanceVault vault = new VictimAssistanceVault(
+        // VictimAssistanceVault vault = 
+        new VictimAssistanceVault(
             _beneficiary,
             payable(campaign),
-            registry
-        );
+            governor,
+            _fee
+
+        );  
         
-        registry.registerVAC(address(campaign), address(vault));
+        // registry.registerVAC(address(campaign), address(vault));
     }
 
-    function pause() public onlyOpSec {
-        // require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistanceFactory: unauthorized");
+    function pause() public onlyRole(0x00) {
         _pause();
     }
 
-    function unpause() public onlyOpSec {
-        // require(hasRole(PAUSER_ROLE, _msgSender()) || hasRole(EXECUTOR_ROLE, _msgSender()), "VictimAssistanceFactory: unauthorized");
+    function unpause() public onlyRole(0x00) {
         _unpause();
     }
 }
