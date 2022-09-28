@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../common/ERC721PaymentSplitter.sol";
+import "./ERC721PaymentSplitter.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract RevShareAgreement is ERC721PaymentSplitter {

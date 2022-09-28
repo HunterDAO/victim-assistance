@@ -23,6 +23,7 @@ contract VictimAssistanceFactory is Pausable, AccessControl {
         uint256 _fee
     ) 
         public
+        whenNotPaused
     {   
         HuntCrowdfunding campaign = new HuntCrowdfunding(
             _maximumFunding,
@@ -38,11 +39,11 @@ contract VictimAssistanceFactory is Pausable, AccessControl {
         );  
     }
 
-    function pause() public onlyRole(0x00) {
+    function pause() public onlyRole(0x00) whenNotPaused {
         _pause();
     }
 
-    function unpause() public onlyRole(0x00) {
+    function unpause() public onlyRole(0x00) whenPaused {
         _unpause();
     }
 }

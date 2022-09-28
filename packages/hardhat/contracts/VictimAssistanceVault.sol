@@ -44,19 +44,14 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
         _;
     }
 
-    receive() external payable {
-        if (paused()) {
-            revert("#receive: Cannot deposit funds into locked vault.");
-        } else {
-            emit Deposit(_msgSender(), msg.value);
-        }
+    receive() external payable whenNotPaused {
+        emit Deposit(_msgSender(), msg.value);
     }
 
     function addSpender(
         address newSpender
     ) 
         public
-        whenNotPaused
         spenderOrAdmin
     {
         grantRole(SPENDER_ROLE, newSpender);
@@ -90,32 +85,32 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
         _canSpend = true;
     }
 
-    function withdraw() external whenNotPaused override onlyRole(SPENDER_ROLE) {
+    function withdraw() external whenPaused override onlyRole(SPENDER_ROLE) {
         require(_canSpend = true, "#withdraw: Funds locked until campaign has completed successfully.");
         Address.sendValue(payable(beneficiary), address(this).balance);
         emit Withdrawl(_msgSender(), address(this).balance);
     }
 
-    function withdrawToken(
-        IERC20 token, 
-        uint256 value
-    ) 
-        external
-        override
-        whenNotPaused
-        onlyRole(SPENDER_ROLE)
-    {
-        require(
-            _canSpend = true,
-            "#withdraw: Funds locked until campaign has completed successfully."
-        );
-        require(
-            value > 0 && value < token.balanceOf(address(this)),
-            "#withdraw: Value error."
-        );
-        SafeERC20.safeTransfer(IERC20(token), beneficiary, value);
-        emit WithdrawlTokens(address(token), _msgSender(), value);
-    }
+    // function withdrawToken(
+    //     IERC20 token, 
+    //     uint256 value
+    // ) 
+    //     external
+    //     override
+    //     whenPaused
+    //     onlyRole(SPENDER_ROLE)
+    // {
+    //     require(
+    //         _canSpend = true,
+    //         "#withdraw: Funds locked until campaign has completed successfully."
+    //     );
+    //     require(
+    //         value > 0 && value < token.balanceOf(address(this)),
+    //         "#withdraw: Value error."
+    //     );
+    //     SafeERC20.safeTransfer(IERC20(token), beneficiary, value);
+    //     emit WithdrawlTokens(address(token), _msgSender(), value);
+    // }
 
     function numSpenders() external view returns (uint256) {
         return getRoleMemberCount(SPENDER_ROLE);
@@ -129,13 +124,14 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
         return token.balanceOf(address(this));
     }
 
-    function _imposeFee() internal whenNotPaused {
+    function _imposeFee() internal whenPaused {
         uint256 feeValue = address(this).balance * uint256(fee);
         beneficiary.transfer(feeValue);
     }
 
-    function _imposeTokenFee(IERC20 token) internal whenNotPaused {
-        uint256 feeValue = token.balanceOf(address(this)) * uint256(fee);
-        token.transfer(beneficiary, feeValue);
-    }
+    // TODO: implement _imposeTokenFee calls for every token donated (must store record of all donated tokens)
+    // function _imposeTokenFee(IERC20 token) internal whenPaused {
+        // uint256 feeValue = token.balanceOf(address(this)) * uint256(fee);
+        // token.transfer(beneficiary, feeValue);
+    // }
 }

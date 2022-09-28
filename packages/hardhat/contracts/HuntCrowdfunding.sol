@@ -43,6 +43,7 @@ contract HuntCrowdfunding is Ownable, Pausable {
     address payable  benificiary;
     VictimAssistanceVault private vault;
 
+    bool private vaultSet = false;
     
     mapping(address => uint256) internal donorContribution;
 
@@ -68,15 +69,21 @@ contract HuntCrowdfunding is Ownable, Pausable {
     }
 
     receive () external whenActive payable {
-        _donate();
+        if (paused()) {
+            revert("#receive: Campaign is inactive.");
+        } else {
+            _donate();
+        }
     }
 
     function donate() public whenActive payable {
         _donate();
     }
 
-    function setVaultAddress(address payable _vault) external {
+    function setVaultAddress(address payable _vault) external onlyOwner {
+        require(vaultSet == false, "#setVaultAddress");
         vault = VictimAssistanceVault(_vault);
+        vaultSet = true;
     }
 
     function getVaultAddress() external view returns (address) {
@@ -95,7 +102,7 @@ contract HuntCrowdfunding is Ownable, Pausable {
         _finalizeCampaign();
     } 
 
-    function _donate() internal {
+    function _donate() internal whenNotPaused {
         require(
             (totalCollected <= maximumFunding), 
             "Campaign Funding Cap Already Satisfied"
@@ -135,7 +142,7 @@ contract HuntCrowdfunding is Ownable, Pausable {
         emit DonationReceived(_msgSender(), sendValue);
     }
 
-    function _finalizeCampaign() internal {
+    function _finalizeCampaign() internal whenActive {
         require(
             (block.timestamp >= endTime) || (totalCollected >= maximumFunding), 
             "Campaign should remain active!"
@@ -157,9 +164,5 @@ contract HuntCrowdfunding is Ownable, Pausable {
             _pause();
         }
     }
-
-    /**
-     * Safety Methods
-     */
 
 }
