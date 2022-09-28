@@ -19,38 +19,60 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
     bytes32 private constant CAMPAIGN_ROLE = keccak256("CAMPAIGN_ROLE_ROLE");
     bytes32 private constant SPENDER_ROLE = keccak256("SPENDER_ROLE_ROLE");
 
-    uint256 private fee;
+    uint256 private constant crowdfundFee = 60;
 
-    bool private _canSpend = false;
+    HuntRegistry private registry;
 
     address payable beneficiary;
 
+    error NoAddressZero();
+
     constructor(
-        address payable _beneficiary, // Service provider address
-        address payable _campaign, // Campaign contract address
-        address _governor, // Governor contract address
-        uint256 _fee // DAO referal fee
+        address payable _beneficiary,
+        address payable _campaign,
+        HuntRegistry _registry
     )  {
-        fee = _fee;
+        registry = _registry;
         _grantRole(CAMPAIGN_ROLE, _campaign);
         _grantRole(SPENDER_ROLE, _beneficiary);
-        _grantRole(DEFAULT_ADMIN_ROLE, _governor);
-    }
-
-    modifier spenderOrAdmin() {
-        require(
-            hasRole(SPENDER_ROLE, _msgSender()) || hasRole(0x00, _msgSender()),
-            "Must be beneficiary or admin!"
-        );
-        _;
+        _grantRole(DEFAULT_ADMIN_ROLE, _registry.opSec());
+        _pause();
     }
 
     receive() external payable {
-        if (paused()) {
-            revert("#receive: Cannot deposit funds into locked vault.");
-        } else {
-            emit Deposit(_msgSender(), msg.value);
-        }
+        emit Deposit(_msgSender(), msg.value);
+    }
+
+    function unlockFunds() external whenPaused onlyRole(CAMPAIGN_ROLE) {
+        _imposeFee();
+        _unpause();
+    }
+
+    function retireVault() external whenNotPaused onlyRole(CAMPAIGN_ROLE) {
+        _pause();
+    }
+
+    function withdraw() external whenNotPaused override onlyRole(SPENDER_ROLE) {
+        Address.sendValue(payable(beneficiary), address(this).balance);
+        emit Withdrawl(_msgSender(), address(this).balance);
+    }
+
+    function withdrawTokens(
+        IERC20 token
+    ) 
+        external
+        whenNotPaused
+        onlyRole(SPENDER_ROLE)
+        override
+    {
+        uint256 balance = token.balanceOf(address(this));
+        emit WithdrawlTokens(address(token), _msgSender(), balance);
+        SafeERC20.safeTransfer(IERC20(token), beneficiary, balance);
+    }
+
+    function numSpenders() external view returns (uint256) {
+        // return registry.numSpenders(address(this));
+        return getRoleMemberCount(SPENDER_ROLE);
     }
 
     function addSpender(
@@ -58,8 +80,8 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
     ) 
         public
         whenNotPaused
-        spenderOrAdmin
     {
+        require(hasRole(SPENDER_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be approved spender or admin!");
         grantRole(SPENDER_ROLE, newSpender);
     }
 
@@ -68,8 +90,8 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
     ) 
         public
         whenNotPaused
-        spenderOrAdmin
     {
+        require(hasRole(SPENDER_ROLE, _msgSender()) || hasRole(0x00, _msgSender()), "Must be beneficiary or admin!");
         revokeRole(SPENDER_ROLE, oldSpender);
     }
 
@@ -77,66 +99,20 @@ contract VictimAssistanceVault is IHuntVault, AccessControlEnumerable, Pausable 
         address newSpender,
         address oldSpender
     ) 
-        external
+        public
         whenNotPaused
-        spenderOrAdmin
     {
         addSpender(newSpender);
         removeSpender(oldSpender);
-    }
-
-    function retireVault() external whenNotPaused onlyRole(CAMPAIGN_ROLE) {
-        _pause();
-        _imposeFee();
-        _canSpend = true;
-    }
-
-    function withdraw() external whenNotPaused override onlyRole(SPENDER_ROLE) {
-        require(_canSpend = true, "#withdraw: Funds locked until campaign has completed successfully.");
-        Address.sendValue(payable(beneficiary), address(this).balance);
-        emit Withdrawl(_msgSender(), address(this).balance);
-    }
-
-    function withdrawToken(
-        IERC20 token,
-        uint256 value
-    ) 
-        external
-        override
-        whenNotPaused
-        onlyRole(SPENDER_ROLE)
-    {
-        require(
-            _canSpend = true,
-            "#withdraw: Funds locked until campaign has completed successfully."
-        );
-        require(
-            value > 0 && value < token.balanceOf(address(this)),
-            "#withdraw: Value error."
-        );
-        SafeERC20.safeTransfer(IERC20(token), beneficiary, value);
-        emit WithdrawlTokens(address(token), _msgSender(), value);
-    }
-
-    function numSpenders() external view returns (uint256) {
-        return getRoleMemberCount(SPENDER_ROLE);
     }
 
     function getBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
-    function getTokenBalance(IERC20 token) external view returns (uint256) {
-        return token.balanceOf(address(this));
-    }
-
     function _imposeFee() internal whenNotPaused {
-        uint256 feeValue = address(this).balance * uint256(fee);
-        beneficiary.transfer(feeValue);
-    }
+        uint256 feeValue = address(this).balance * uint256(crowdfundFee);
 
-    function _imposeTokenFee(IERC20 token) internal whenNotPaused {
-        uint256 feeValue = token.balanceOf(address(this)) * uint256(fee);
-        token.transfer(beneficiary, feeValue);
+        registry.treasury().transfer(feeValue);
     }
 }

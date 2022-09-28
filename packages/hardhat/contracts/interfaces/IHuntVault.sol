@@ -22,7 +22,7 @@ interface IHuntVault {
       * @dev Can only be called by the beneficiary. Token must be a valid ERC20 contract.
       * @param token Token contract address.
       */
-    function withdrawToken(IERC20 token, uint256 value) external;
+    function withdrawTokens(IERC20 token) external;
 
     /**
       * @notice Emitted when a deposit is received
