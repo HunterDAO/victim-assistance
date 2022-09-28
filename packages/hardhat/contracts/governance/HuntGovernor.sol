@@ -6,24 +6,22 @@ pragma solidity ^0.8.4;
 import "./HuntGovernorVotes.sol";
 import "./HuntGovernorQuorum.sol";
 import "@openzeppelin/contracts/governance/Governor.sol";
-// import "@openzeppelin/contracts/governance/utils/Votes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorSettings.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-// import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
+import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 // import "../VictimAssistanceFactory.sol";
+
 /// @custom:security-contact admin@hunterdao.io
-// , GovernorTimelockControl
-contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, HuntGovernorVotes, HuntGovernorQuorum {
-    // , TimelockController _timelock
-    // HuntRegistry _registry
+contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, HuntGovernorVotes, HuntGovernorQuorum, GovernorTimelockControl { 
 
     // VictimAssistanceFactory public victimAssistanceFactory;
-    constructor(address _token, address _victimAssistanceFactory)
+    constructor(address _token, Governor, TimelockController _timelock)
+    // , address _victimAssistanceFactory)
         Governor("HuntGovernor")
         GovernorSettings(1 /* 1 block | 19636 = 3 days */, 10 /* 1 week */, 1)
         HuntGovernorVotes(_token)
         HuntGovernorQuorum(4)
-        // GovernorTimelockControl(_timelock)
+        GovernorTimelockControl(_timelock)
     {
         // victimAssistanceFactory = VictimAssistanceFactory(_victimAssistanceFactory);
     }
@@ -60,7 +58,7 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
     function state(uint256 proposalId)
         public
         view
-        override
+        override(Governor, GovernorTimelockControl)
         returns (ProposalState)
     {
         return super.state(proposalId);
@@ -69,7 +67,7 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
     function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
         public
         // (Governor, IGovernor)
-        override
+        override(IGovernor, Governor)
         returns (uint256)
     {
         return super.propose(targets, values, calldatas, description);
@@ -86,14 +84,14 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
 
     function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
         internal
-        override
+        override(Governor, GovernorTimelockControl)
     {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     function _cancel(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
         internal
-        override
+        override(Governor, GovernorTimelockControl)
         returns (uint256)
     {
         return super._cancel(targets, values, calldatas, descriptionHash);
@@ -102,7 +100,7 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
     function _executor()
         internal
         view
-        override
+        override(Governor, GovernorTimelockControl)
         returns (address)
     {
         return super._executor();
@@ -124,7 +122,7 @@ contract HuntGovernor is Governor, GovernorSettings, GovernorCountingSimple, Hun
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override
+        override(Governor, GovernorTimelockControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
