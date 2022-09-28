@@ -2,12 +2,16 @@ import {
     createContext, 
     Dispatch, 
     useContext, 
-    // useEffect, 
+    useEffect, 
+    useState,
     useReducer
 } from "react";
+import UAuthSPA from '@uauth/js'
+import Web3Modal from 'web3modal'
 import Client, { UserInfo } from "@uauth/js";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-
+import * as UAuthWeb3Modal from '@uauth/web3modal'
+import WalletConnectProvider from '@walletconnect/web3-provider'
+import Core from "web3modal";
 /**
  * Types
  */
@@ -130,16 +134,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider = ({authState: AuthStateType,  children }) => {
     const [auth, authDispatch] = useReducer(authReducer, undefined);
+    const [web3modal, setWeb3Modal] = useState<Core>();
     // const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    // const [user, setUser] = useState<UserInfo>();
-    // const [walletAddress, setAccount] = useState<string>();
-    // const [client, setClient] = useState<WalletConnectProvider>();
 
-    // useEffect(() => {
-        // 
-    // }, []);
+    useEffect(() => {
+        if (window) {
+            setWeb3Modal(new Web3Modal({providerOptions}))
+        };
+    }, []);
 
-    // const signup = async () => {}
+    const uauthOptions: UAuthWeb3Modal.IUAuthOptions = {
+        clientID: 'hunter-dao-dapp',
+        redirectUri: 'http://localhost:3000',
+        scope: 'openid wallet',
+    }
+
+    const providerOptions = {
+        'custom-uauth': {
+            display: UAuthWeb3Modal.display,
+
+            connector: UAuthWeb3Modal.connector,
+
+            package: UAuthSPA,
+
+            options: uauthOptions,
+        },
+        walletconnect: {
+            package: WalletConnectProvider,
+            options: {
+            infuraId: process.env.INFURA_ID,
+            },
+        },
+    }
+    
+
+    UAuthWeb3Modal.registerWeb3Modal(web3modal);
 
     const login = async () => {
         return await auth.client.user()

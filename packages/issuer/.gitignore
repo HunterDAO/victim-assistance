@@ -1,7 +1,0 @@
-node_modules
-.DS_Store
-.env
-gactions
-creds.data
-.nyc_output
-coverage

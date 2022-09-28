@@ -54,7 +54,7 @@ const MyApp = ({ Component, pageProps }: AppProps): JSX.Element => {
     isLoading: false,
   };
   
-  if (!window) {
+  if (typeof window === undefined) {
     return null;
    } { 
     return (

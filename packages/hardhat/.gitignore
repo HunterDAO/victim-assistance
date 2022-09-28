@@ -5,8 +5,6 @@
 artifacts
 cache
 deployments
-node_modules
-
 
 cache/
 artifacts/
@@ -20,7 +18,9 @@ typechain/
 !.vscode/extensions.json.default
 
 node_modules/
+
 .env
+.env.local
 
 .yalc
 yalc.lock
@@ -117,6 +117,3 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
-
-node_modules
-node_modules

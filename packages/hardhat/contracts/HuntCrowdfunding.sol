@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import "./VictimAssistanceVault.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -40,7 +41,7 @@ contract HuntCrowdfunding is Ownable, Pausable {
     Counters.Counter public numDonors;
     
     address payable  benificiary;
-    address private vault;
+    VictimAssistanceVault private vault;
 
     
     mapping(address => uint256) internal donorContribution;
@@ -64,7 +65,6 @@ contract HuntCrowdfunding is Ownable, Pausable {
         startTime = block.timestamp;
         endTime = startTime + campaignDuration;
         benificiary = _beneficiary;
-        // registry = _registry;
     }
 
     receive () external whenActive payable {
@@ -73,6 +73,10 @@ contract HuntCrowdfunding is Ownable, Pausable {
 
     function donate() public whenActive payable {
         _donate();
+    }
+
+    function setVaultAddress(address payable _vault) external {
+        vault = VictimAssistanceVault(_vault);
     }
 
     function getVaultAddress() external view returns (address) {
@@ -141,7 +145,7 @@ contract HuntCrowdfunding is Ownable, Pausable {
             campaignStatus = CampaignStatus.Successful;
             emit CampaignSucceeded(totalCollected);
 
-            // vault.unlockFunds();
+            vault.retireVault();
 
             _pause();
         } else {

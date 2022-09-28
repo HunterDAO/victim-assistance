@@ -32,8 +32,8 @@ const providerOptions = {
   // Include any other web3modal providers here too...
 }
 
-const web3modal = new Web3Modal({providerOptions})
+// const web3modal = new Web3Modal({providerOptions})
 
-UAuthWeb3Modal.registerWeb3Modal(web3modal) // Register the web3modal...
+// UAuthWeb3Modal.registerWeb3Modal(web3modal) // Register the web3modal...
 
-export default web3modal;
+// export default web3modal;

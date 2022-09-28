@@ -26,24 +26,24 @@ function Nav() {
     const { deactivate } = useEthers();
     const { isLoading, walletAddress, client, login, authDispatch } = useAuth();
 
-    useEffect(() => {
-      UAuthWeb3Modal.getUAuth(UAuthSPA, uauthOptions)
-        .loginCallback()
-        .then(async () => {
-          authDispatch({ type: 'setClient', value: await web3modal.connectTo('custom-uauth') });
-          authDispatch({ type: 'setIsLoading', value: true });
-          client
-            .user()
-            .then((user: UserInfo) => authDispatch({ type: 'loginAction', value: { walletAddress: user.wallet_address, user, isLoggedIn: true } }))
-            .catch((err: string) => {
-              throw new Error(err)
-            })
-            .finally(() => authDispatch({ type: 'setIsLoading', value: true }));
-        })
-        .catch(error => {
-          throw new Error(error); // TODO: Redirect to failure page
-        })
-    }, [])
+    // useEffect(() => {
+    //   UAuthWeb3Modal.getUAuth(UAuthSPA, uauthOptions)
+    //     .loginCallback()
+    //     .then(async () => {
+    //       authDispatch({ type: 'setClient', value: await web3modal.connectTo('custom-uauth') });
+    //       authDispatch({ type: 'setIsLoading', value: true });
+    //       client
+    //         .user()
+    //         .then((user: UserInfo) => authDispatch({ type: 'loginAction', value: { walletAddress: user.wallet_address, user, isLoggedIn: true } }))
+    //         .catch((err: string) => {
+    //           throw new Error(err)
+    //         })
+    //         .finally(() => authDispatch({ type: 'setIsLoading', value: true }));
+    //     })
+    //     .catch(error => {
+    //       throw new Error(error); // TODO: Redirect to failure page
+    //     })
+    // }, [])
 
 
     const handleWeb3Modal = async () => {

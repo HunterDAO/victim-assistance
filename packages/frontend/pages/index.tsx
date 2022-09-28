@@ -15,7 +15,7 @@ function HomeIndex() {
       <Heading as="h1" mb="8">
         Next.js Ethereum Starter
       </Heading>
-      <Button
+      {/* <Button
         as="a"
         size="lg"
         colorScheme="teal"
@@ -28,7 +28,7 @@ function HomeIndex() {
       </Button>
       <Text mt="8" fontSize="xl">
         This page only works on the ROPSTEN Testnet or on a Local Chain.
-      </Text>
+      </Text> */}
       <Box maxWidth="container.sm" p="8" mt="8" bg="gray.100">
         <Text fontSize="xl">Contract Address: {"0x000"}</Text>
         <Divider my="8" borderColor="gray.400" />

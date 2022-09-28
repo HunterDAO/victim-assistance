@@ -16,17 +16,14 @@
     "dev": "yarn workspace dapp dev",
     "test": "sh ./scripts/test.sh",
     "test:contracts": "yarn workspace contracts run test",
-    "test:issuer": "yarn workspace hunterdao-proxy-issuer run test",
-    "lint:dapp": "yarn workspace dapp lint",
+    "lint": "yarn workspace dapp lint",
     "build": "yarn workspace dapp build",
     "start": "sh ./scripts/start.sh",
-    "start:dapp": "yarn workspace dapp start",
+    "dapp": "yarn workspace dapp start",
     "compile": "./scripts/compile.sh",
     "chain": "yarn workspace contracts chain",
     "console": "yarn workspace contracts console",
-    "deploy": "yarn workspace contracts deploy",
-    "full-install": "sh ./scripts/install.sh",
-    "generate-seed": "yarn workspace hunterdao-proxy-issuer generate-seed"
+    "deploy": "yarn workspace contracts deploy"
   },
   "workspaces": {
     "packages": [
